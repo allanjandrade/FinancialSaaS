@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#132238" />
+    <title>Controle Financeiro</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      window.SUPABASE_CONFIG = {
+        url: "https://oedbaemzavzvxysikkpk.supabase.co",
+        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lZGJhZW16YXZ6dnh5c2lra3BrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNjQ1MTYsImV4cCI6MjA5NTY0MDUxNn0.S7y0GfqtnTH6Niinb1fCA0mDKKBKpfYYjGTyPi3YJ-w",
+        // geminiApiKey removida do front-end (segurança)
+      };
+      
+      // Initialize Supabase globally
+      window.supabase = supabase.createClient(
+        window.SUPABASE_CONFIG.url,
+        window.SUPABASE_CONFIG.anonKey
+      );
+    </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./error-tracking.js"></script>
+    <script src="./analytics.js"></script>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="icon-home" viewBox="0 0 24 24">
+        <path d="M3 10.8 12 3l9 7.8v9.7a.5.5 0 0 1-.5.5h-5.3v-6.2H8.8V21H3.5a.5.5 0 0 1-.5-.5z" />
+      </symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24">
+        <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" />
+      </symbol>
+      <symbol id="icon-chart" viewBox="0 0 24 24">
+        <path d="M4 19h16v2H3a1 1 0 0 1-1-1V3h2zM7 16h3V8H7zm5 0h3V4h-3zm5 0h3v-6h-3z" />
+      </symbol>
+      <symbol id="icon-card" viewBox="0 0 24 24">
+        <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5zm2 1.2h14V6.5a.5.5 0 0 0-.5-.5h-13a.5.5 0 0 0-.5.5zm0 3v6.8a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-6.8zm2 4.3h5v1.6H7z" />
+      </symbol>
+      <symbol id="icon-wallet" viewBox="0 0 24 24">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H18v3h1.5A2.5 2.5 0 0 1 22 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 4 17.5zm2.5-.5a.5.5 0 0 0 0 1H16V5zM6 8v9.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5zm10 4h3v3h-3z" />
+      </symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24">
+        <path d="M11 4h2v9l3.5-3.5 1.4 1.4L12 16.8l-5.9-5.9 1.4-1.4L11 13zM5 19h14v2H5z" />
+      </symbol>
+      <symbol id="icon-trash" viewBox="0 0 24 24">
+        <path d="M9 3h6l1 2h5v2H3V5h5zm-3 6h12l-.8 12H6.8zm3 2 .3 8h1.8l-.2-8zm4 0-.2 8h1.8l.3-8z" />
+      </symbol>
+      <symbol id="icon-filter" viewBox="0 0 24 24">
+        <path d="M3 5h18v2H3zm3 6h12v2H6zm4 6h4v2h-4z" />
+      </symbol>
+      <symbol id="icon-logout" viewBox="0 0 24 24">
+        <path d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3H9c-1.1 0-2 .9-2 2v3h2V5h11v14H9v-3H7v3c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+      </symbol>
+      <symbol id="icon-chevron-up" viewBox="0 0 24 24">
+        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+      </symbol>
+      <symbol id="icon-eye" viewBox="0 0 24 24">
+        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+      </symbol>
+      <symbol id="icon-eye-off" viewBox="0 0 24 24">
+        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+      </symbol>
+      <symbol id="icon-ai" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+      </symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+      </symbol>
+    </svg>
+
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-toggle" id="sidebarToggle">
+          <i data-lucide="chevron-up"></i>
+        </div>
+        <div class="brand">
+          <div class="brand-mark">CF</div>
+          <div>
+            <strong>Controle</strong>
+            <span>Financeiro</span>
+          </div>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-button" id="mobileMenuButton" style="display: none;">
+          <i data-lucide="menu"></i>
+        </button>
+        
+        <nav class="nav" aria-label="Principal">
+          <button class="nav-item is-active" data-view="home"><i data-lucide="home"></i><span>Início</span></button>
+          <button class="nav-item" data-view="entries"><i data-lucide="dollar-sign"></i><span>Lançar</span></button>
+          <button class="nav-item" data-view="dashboard"><i data-lucide="bar-chart-3"></i><span>Dashboard</span></button>
+          <button class="nav-item" data-view="card"><i data-lucide="credit-card"></i><span>Cartão</span></button>
+          <button class="nav-item" data-view="benefit"><i data-lucide="utensils"></i><span>Vale</span></button>
+          <button class="nav-item" data-view="ai"><i data-lucide="bot"></i><span>Assistente IA</span></button>
+          <button class="nav-item" data-view="settings"><i data-lucide="settings"></i><span>Config</span></button>
+        </nav>
+        
+        <!-- Mobile Drawer -->
+        <div class="mobile-drawer" id="mobileDrawer" style="display: none;">
+          <div class="drawer-overlay" id="drawerOverlay"></div>
+          <div class="drawer-content">
+            <div class="drawer-header">
+              <div class="brand">
+                <div class="brand-mark">CF</div>
+                <div>
+                  <strong>Controle</strong>
+                  <span>Financeiro</span>
+                </div>
+              </div>
+              <button class="drawer-close" id="drawerClose">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+            <nav class="drawer-nav">
+              <button class="drawer-item" data-view="home">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+              </button>
+              <button class="drawer-item" data-view="entries">
+                <i data-lucide="dollar-sign"></i>
+                <span>Lançar</span>
+              </button>
+              <button class="drawer-item" data-view="dashboard">
+                <i data-lucide="bar-chart-3"></i>
+                <span>Dashboard</span>
+              </button>
+              <button class="drawer-item" data-view="card">
+                <i data-lucide="credit-card"></i>
+                <span>Cartão</span>
+              </button>
+              <button class="drawer-item" data-view="benefit">
+                <i data-lucide="utensils"></i>
+                <span>Vale</span>
+              </button>
+              <button class="drawer-item" data-view="ai">
+                <i data-lucide="bot"></i>
+                <span>Assistente IA</span>
+              </button>
+              <button class="drawer-item" data-view="settings">
+                <i data-lucide="settings"></i>
+                <span>Configurações</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1 id="screenTitle">Início</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button mobile-menu-button" id="mobileMenuButton" title="Menu">
+              <i data-lucide="menu"></i>
+            </button>
+            <label class="select-wrap">
+              <span>Mês</span>
+              <select id="monthSelect"></select>
+            </label>
+            <button class="icon-button" id="toggleBalanceButton" title="Ocultar/Exibir saldo">
+              <i data-lucide="eye"></i>
+            </button>
+            <button class="icon-button" id="exportButton" title="Exportar dados">
+              <i data-lucide="download"></i>
+            </button>
+            <button class="icon-button" id="moreOptionsButton" title="Mais opções">
+              <i data-lucide="more-vertical"></i>
+            </button>
+          </div>
+          
+          <!-- More Options Popover -->
+          <div class="more-options-popover" id="moreOptionsPopover" style="display: none;">
+            <div class="popover-content">
+              <div class="popover-body">
+                <button class="popover-item" data-action="settings">
+                  <i data-lucide="settings"></i>
+                  <span>Configurações</span>
+                </button>
+                <button class="popover-item" data-action="profile">
+                  <i data-lucide="user"></i>
+                  <span>Perfil</span>
+                </button>
+                <button class="popover-item" data-action="help">
+                  <i data-lucide="help-circle"></i>
+                  <span>Ajuda</span>
+                </button>
+                <div class="popover-divider"></div>
+                <button class="popover-item" data-action="logout">
+                  <i data-lucide="log-out"></i>
+                  <span>Sair</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="view is-visible" id="view-home">
+          <div class="summary-grid" id="summaryGrid"></div>
+          <div class="workspace-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Atalhos</h2>
+              </div>
+              <div class="quick-actions">
+                <button class="action-tile" data-open-entry="expense"><i data-lucide="receipt-text" class="icon-stroke text-red"></i><span>Nova despesa</span></button>
+                <button class="action-tile" data-open-entry="income"><i data-lucide="banknote" class="icon-stroke text-green"></i><span>Nova receita</span></button>
+                <label class="action-tile" for="upload-comprovante" style="cursor: pointer;">
+                  <i data-lucide="camera" class="icon-stroke"></i><span>Escanear comprovante</span>
+                  <input type="file" id="upload-comprovante" accept="image/*,application/pdf" style="display: none;" />
+                </label>
+                <button class="action-tile" data-go="dashboard"><i data-lucide="pie-chart" class="icon-stroke"></i><span>Ver gráficos</span></button>
+                <button class="action-tile" data-go="card"><i data-lucide="credit-card" class="icon-stroke"></i><span>Cartão</span></button>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Últimos lançamentos</h2>
+              </div>
+              <div class="activity-list" id="recentList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-entries">
+          <div class="entry-layout">
+            <section class="panel entry-panel">
+              <div class="segmented" role="tablist" aria-label="Tipo de lançamento">
+                <button class="segment is-active" data-entry-type="expense">Despesa</button>
+                <button class="segment" data-entry-type="income">Receita</button>
+              </div>
+              <form id="entryForm" class="entry-form">
+                <input type="hidden" id="entryType" value="expense" />
+                <div class="form-row">
+                  <label>Data<input id="entryDate" type="date" required /></label>
+                  <label>Valor<input id="entryAmount" type="number" step="0.01" min="0" required /></label>
+                </div>
+                <div class="form-row">
+                  <label id="categoryLabel">Categoria<select id="entryCategory"></select></label>
+                  <label id="paymentLabel">Pagamento<select id="entryPayment"></select></label>
+                </div>
+                <label>Descrição<input id="entryDescription" type="text" maxlength="80" placeholder="Opcional" /></label>
+                <label id="paidLabel" class="switch-row">
+                  <input id="entryPaid" type="checkbox" checked />
+                  <span>Pago</span>
+                </label>
+                <label id="installmentLabel" class="switch-row">
+                  <input id="entryInstallment" type="checkbox" />
+                  <span>Parcelado</span>
+                </label>
+                <div id="installmentCountRow" class="form-row" style="display: none;">
+                  <label>Número de parcelas<input id="entryInstallmentCount" type="number" min="2" max="60" value="2" /></label>
+                </div>
+                <div class="form-actions">
+                  <button class="secondary-button" type="button" id="clearEntryButton">Limpar</button>
+                  <button class="primary-button" type="submit"><svg><use href="#icon-plus"></use></svg><span>Salvar lançamento</span></button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Histórico</h2>
+                <button class="icon-button" id="clearButton" title="Limpar dados"><svg><use href="#icon-trash"></use></svg></button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Categoria</th>
+                      <th>Pagamento</th>
+                      <th>Valor</th>
+                      <th>Impacto</th>
+                    </tr>
+                  </thead>
+                  <tbody id="entriesTable"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-dashboard">
+          <div class="chart-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Receitas x Despesas</h2>
+              </div>
+              <canvas id="barChart" height="260"></canvas>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Distribuição</h2>
+              </div>
+              <canvas id="donutChart" height="260"></canvas>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Fluxo anual</h2>
+            </div>
+            <div class="monthly-list" id="monthlyList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-card">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Faturas do Cartão</h2>
+            </div>
+            <div class="card-ledger" id="cardLedger"></div>
+            <div class="form-actions">
+              <button class="primary-button" type="button" id="payCardBillButton">Fechar e Pagar Fatura</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-benefit">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Vale Alimentação</h2>
+            </div>
+            <div class="benefit-grid" id="benefitGrid"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-ai">
+          <section class="panel ai-chat-panel">
+            <div class="panel-head">
+              <h2>Assistente Financeiro IA</h2>
+              <div class="ai-actions">
+                <button class="icon-button" id="settingsMenuButton" title="Configurações">
+                  <i data-lucide="settings"></i>
+                </button>
+                <button class="icon-button" id="newConversationButton" title="Nova conversa">
+                  <i data-lucide="plus"></i>
+                </button>
+                <button class="icon-button" id="toggleConversationList" title="Histórico de conversas">
+                  <i data-lucide="history"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Settings Popover -->
+            <div class="settings-popover" id="settingsPopover" style="display: none;">
+              <div class="popover-content">
+                <div class="popover-header">
+                  <h3>Configurações</h3>
+                  <button class="popover-close" id="closeSettingsPopover">
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
+                <div class="popover-body">
+                  <button class="popover-item" data-action="clear-history">
+                    <i data-lucide="trash-2"></i>
+                    <span>Limpar Histórico</span>
+                  </button>
+                  <button class="popover-item" data-action="export-chat">
+                    <i data-lucide="download"></i>
+                    <span>Exportar Conversa</span>
+                  </button>
+                  <button class="popover-item" data-action="ai-settings">
+                    <i data-lucide="sliders"></i>
+                    <span>Configurações da IA</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="ai-layout">
+              <aside class="conversation-sidebar" id="conversationSidebar" style="display: none;">
+                <div class="conversation-list" id="conversationList"></div>
+              </aside>
+              <div class="chat-container">
+                <!-- Smart Chips para sugestões rápidas -->
+                <div class="smart-chips-container" id="smartChipsContainer">
+                  <button class="smart-chip" data-suggestion="Registrar despesa">
+                    <i data-lucide="dollar-sign"></i>
+                    <span>Registrar Despesa</span>
+                  </button>
+                  <button class="smart-chip" data-suggestion="Ver saldo do mês">
+                    <i data-lucide="wallet"></i>
+                    <span>Ver Saldo</span>
+                  </button>
+                  <button class="smart-chip" data-suggestion="Anexar nota fiscal">
+                    <i data-lucide="file-text"></i>
+                    <span>Anexar Nota</span>
+                  </button>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                  <div class="ai-message">
+                    <div class="message-content">
+                      <p>Olá! Sou seu assistente financeiro pessoal. Posso ajudar você a analisar seus gastos, calcular limites disponíveis e responder perguntas sobre suas finanças. Como posso ajudar hoje?</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                
+                <!-- Input bar fixa no rodapé com design de balão -->
+                <div class="chat-input-wrapper">
+                  <div class="file-preview-chip" id="filePreviewChip" style="display: none;">
+                    <div class="chip-content">
+                      <i data-lucide="file" class="chip-icon"></i>
+                      <span class="chip-text" id="chipFileName"></span>
+                      <button class="chip-remove" id="chipRemove" title="Remover arquivo">
+                        <i data-lucide="x"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="chat-input-bar">
+                    <input type="file" id="aiFileInput" class="chat-file-input" accept="image/png,image/jpeg,image/jpg,application/pdf" style="display: none;" />
+                    <button class="input-action-button attach-button" id="attachFileButton" title="Anexar arquivo">
+                      <i data-lucide="paperclip"></i>
+                    </button>
+                    <input type="text" id="aiInput" class="chat-input" placeholder="Digite sua mensagem ou descreva a despesa..." />
+                    <button class="input-action-button send-button" id="sendAiMessage" title="Enviar mensagem">
+                      <i data-lucide="send"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="workspace-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Configurações Financeiras</h2>
+              </div>
+              <form id="settingsForm" class="entry-form">
+                <div class="form-row">
+                  <label>Limite cartão<input id="settingCardLimit" type="number" step="0.01" min="0" /></label>
+                  <label>Saldo inicial VA<input id="settingVaInitialBalance" type="number" step="0.01" min="0" /></label>
+                </div>
+                <div class="form-row">
+                  <label>Dia fechamento<input id="settingCardClosingDay" type="number" min="1" max="31" /></label>
+                  <label>Dia vencimento<input id="settingCardDueDay" type="number" min="1" max="31" /></label>
+                </div>
+                <button class="primary-button" type="submit"><svg><use href="#icon-download"></use></svg><span>Salvar configurações</span></button>
+              </form>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h2>Gerenciamento da Familia</h2>
+              </div>
+              
+              <!-- Family Info Card -->
+              <div class="info-card" id="familyInfo">
+                <p class="helper-text">Carregando informacoes da familia...</p>
+              </div>
+              
+              <!-- Family Actions Card -->
+              <div class="actions-card" id="familyActions">
+                <button class="primary-button" id="createFamilyButton" type="button">Criar nova familia</button>
+                <button class="secondary-button" id="inviteMemberButton" type="button">Convidar membro</button>
+              </div>
+              
+              <!-- Family Members Card -->
+              <div class="members-card" id="familyMembers">
+                <h3>Membros</h3>
+                <div id="membersList"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="./app.js?v=4"></script>
+  </body>
+</html>

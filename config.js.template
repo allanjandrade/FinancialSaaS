@@ -1,0 +1,14 @@
+// Supabase Configuration
+// Rename this file to config.js and add your credentials
+// DO NOT commit config.js to git (it's in .gitignore)
+
+window.SUPABASE_CONFIG = {
+  url: 'https://your-project.supabase.co',
+  anonKey: 'your-anon-key-here'
+};
+
+// Optional: Error tracking configuration
+// window.SENTRY_DSN = 'your-sentry-dsn-here';
+
+// Optional: Analytics configuration  
+// window.GA_MEASUREMENT_ID = 'your-ga-measurement-id-here';
