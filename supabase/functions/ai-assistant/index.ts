@@ -14,8 +14,10 @@ serve(async (req) => {
 
   try {
     // Get Authorization header
-    const authHeader = req.headers.get('Authorization')
-    
+    // Supabase edge function clients sometimes send it as Authorization: Bearer <jwt>
+    // or as Authorization: <jwt>. We accept either and also accept x-authorization.
+    const authHeader = req.headers.get('Authorization') || req.headers.get('x-authorization')
+
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Authorization header missing' }),
@@ -23,16 +25,21 @@ serve(async (req) => {
       )
     }
 
+    // Ensure the header is in Bearer format for the Supabase client
+    const token = authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader}`
+
+
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { Authorization: token },
         },
       }
     )
+
 
     // Get user from auth
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
@@ -45,6 +52,9 @@ serve(async (req) => {
 
     // Get request body
     const { message, acao, imagemBase64, mimeType, conversationId, context: requestContext } = await req.json()
+
+    // Only for debugging if needed: avoid printing secrets
+
     
     // Get user's family (optional for general conversations)
     let familyMember = null
@@ -480,10 +490,12 @@ Respond to the user's question or request based on this financial context.`
     )
 
   } catch (error) {
-    console.error('Edge function error:', error)
+    const message = error?.message ? String(error.message) : 'Internal server error'
+    // Return safer debug info for front-end testing (no secrets)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', detail: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
+
 })
