@@ -3,7 +3,7 @@
     <section class="purchase-hero">
       <div>
         <p class="eyebrow">Planejamento</p>
-        <h1>Compras planejadas</h1>
+        <h1>Nova compra</h1>
         <p>Acompanhe produtos, compare precos e decida se vale comprar agora.</p>
       </div>
       <router-link class="secondary-button" to="/purchases">Ver compras</router-link>
@@ -238,7 +238,7 @@ const canIdentify = computed(() => (mode.value === 'image' ? Boolean(imageFile.v
 const multipleUrls = computed(() => extractProductUrls(inputValue.value).filter(Boolean))
 const primaryActionLabel = computed(() => {
   if (mode.value === 'link') return multipleUrls.value.length > 1 ? 'Escolher links' : 'Adicionar produto pelo link'
-  return 'Pesquisar produto'
+  return 'Procurar produto'
 })
 
 function isKnownShortLink(url) {
