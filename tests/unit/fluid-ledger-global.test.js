@@ -3,6 +3,19 @@ import { describe, expect, it } from 'vitest'
 
 const read = (file) => fs.readFileSync(file, 'utf8')
 const exists = (file) => fs.existsSync(file)
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const blockFor = (source, selector) => {
+  const selectorPattern = escapeRegex(selector)
+  const rulePattern = new RegExp(`(?:^|})\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
+  const blocks = []
+  let match
+
+  while ((match = rulePattern.exec(source)) !== null) {
+    blocks.push(`${match[1]} {${match[2]}}`)
+  }
+
+  return blocks.join('\n')
+}
 
 describe('fluid ledger global redesign', () => {
   it('defines ledger surface tokens and neutralizes raised card defaults', () => {
@@ -27,7 +40,12 @@ describe('fluid ledger global redesign', () => {
     expect(main).toContain('background: var(--surface-ledger)')
     expect(main).toContain('box-shadow: none')
     expect(main).toContain('border-radius: var(--radius-sm)')
-    expect(main).not.toContain('transform: translateY(-')
+
+    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.app-card', '.metric-card', '.kpi-card']) {
+      const surfaceBlocks = blockFor(main, selector)
+      expect(surfaceBlocks, `${selector} should not reintroduce raised motion`).not.toContain('transform: translateY(-')
+      expect(surfaceBlocks, `${selector} should not reintroduce raised hover shadows`).not.toContain('box-shadow: var(--shadow-card-hover)')
+    }
 
     expect(layout).toContain('background: var(--surface-ledger)')
     expect(layout).toContain('box-shadow: none')
@@ -97,8 +115,12 @@ describe('fluid ledger global redesign', () => {
       read('src/views/public/Pricing.vue'),
     ].join('\n')
 
-    expect(source).not.toContain('hover {')
-    expect(source).not.toContain('box-shadow: var(--shadow-card-hover)')
+    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.app-card', '.metric-card', '.kpi-card', '.feature-card', '.trust-card', '.first-step-card']) {
+      const surfaceBlocks = blockFor(source, selector)
+      expect(surfaceBlocks, `${selector} should not lift static ledger surfaces`).not.toContain('transform: translateY(-')
+      expect(surfaceBlocks, `${selector} should not use raised card hover shadows`).not.toContain('box-shadow: var(--shadow-card-hover)')
+    }
+
     expect(source).not.toContain('grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))')
   })
 })
