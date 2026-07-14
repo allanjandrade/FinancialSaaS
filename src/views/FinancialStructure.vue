@@ -1,5 +1,5 @@
 <template>
-  <div class="structure-view">
+  <div class="structure-view ledger-page-shell">
     <section class="panel hero">
       <div>
         <nav class="breadcrumb" aria-label="Breadcrumb">Finanças / Gestão financeira</nav>
@@ -23,8 +23,8 @@
     />
 
     <!-- Contas -->
-    <section v-if="activeTab === 'accounts'" class="accounts-workspace">
-      <div class="accounts-layout" :class="{ 'form-hidden': !accountFormVisible }">
+    <LedgerSection v-if="activeTab === 'accounts'" :divided="false" class="accounts-workspace">
+      <div class="accounts-layout ledger-workspace" :class="{ 'form-hidden': !accountFormVisible }">
         <aside v-if="accountFormVisible" class="accounts-sidebar">
           <section ref="accountFormPanel" class="panel accounts-entry-panel">
             <header class="accounts-entry-header">
@@ -120,7 +120,7 @@
           empty-message="Adicione sua primeira conta para ativar o contexto financeiro."
         />
       </div>
-    </section>
+    </LedgerSection>
 
     <!-- Entidades -->
     <section v-if="activeTab === 'entities'" class="panel corporate-panel">
@@ -465,6 +465,7 @@ import AccountsActionBar from '@/components/financial-accounts/AccountsActionBar
 import AccountsKpiCards from '@/components/financial-accounts/AccountsKpiCards.vue'
 import AccountsTable from '@/components/financial-accounts/AccountsTable.vue'
 import AccountsTabs from '@/components/financial-accounts/AccountsTabs.vue'
+import LedgerSection from '@/components/layout/LedgerSection.vue'
 import OperationalContextPanel from '@/components/layout/OperationalContextPanel.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
@@ -1172,11 +1173,11 @@ function formatDate(d) {
 }
 
 .panel {
-  background: var(--gradient-panel);
+  background: transparent;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .hero {
@@ -1270,7 +1271,7 @@ function formatDate(d) {
 }
 
 .accounts-entry-panel {
-  background: var(--gradient-panel);
+  background: transparent;
   border-color: var(--border-color);
   color: var(--text-primary);
   position: sticky;

@@ -1,5 +1,5 @@
 <template>
-  <div class="entries-view operation-shell" data-testid="entries-page">
+  <div class="entries-view operation-shell ledger-page-shell" data-testid="entries-page">
     <header class="entries-header operation-hero" data-testid="operation-hero">
       <div>
         <p class="eyebrow">Movimentações</p>
@@ -27,13 +27,15 @@
       </div>
     </header>
 
-    <section class="entries-premium-rail operation-metric-rail" data-testid="entries-premium-rail">
-      <article v-for="metric in entriesRailMetrics" :key="metric.label" class="entry-rail-card" :class="metric.tone">
-        <span>{{ metric.label }}</span>
-        <strong>{{ metric.value }}</strong>
-        <small>{{ metric.hint }}</small>
-      </article>
-    </section>
+    <LedgerSection :divided="false" class="entries-ledger-section">
+      <section class="entries-premium-rail operation-metric-rail ledger-stat-strip entries-ledger-strip" data-testid="entries-premium-rail">
+        <article v-for="metric in entriesRailMetrics" :key="metric.label" class="entry-rail-card" :class="metric.tone">
+          <span>{{ metric.label }}</span>
+          <strong>{{ metric.value }}</strong>
+          <small>{{ metric.hint }}</small>
+        </article>
+      </section>
+    </LedgerSection>
 
     <form @submit.prevent="handleSubmit" class="entries-workspace operation-layout">
       <details
@@ -550,6 +552,7 @@ import { useEntryAttachmentUpload } from '@/composables/useEntryAttachmentUpload
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ContextualAssistant from '@/components/ContextualAssistant.vue'
+import LedgerSection from '@/components/layout/LedgerSection.vue'
 import OperationalContextPanel from '@/components/layout/OperationalContextPanel.vue'
 import { parseStatementFile, STATEMENT_FILE_ACCEPT } from '@/utils/statement-import.js'
 import {
@@ -1511,7 +1514,7 @@ onMounted(() => {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 42%),
     var(--gradient-panel);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .entries-hero-actions {
@@ -1553,7 +1556,7 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--bg-panel) 88%, var(--bg-hover));
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .entry-rail-card span,
@@ -1664,10 +1667,10 @@ onMounted(() => {
 
 .panel {
   min-width: 0;
-  background: var(--bg-panel);
+  background: transparent;
   border-radius: var(--radius-lg);
   padding: clamp(1rem, 2vw, 1.5rem);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   transition: background-color 0.3s ease;
 }
 
@@ -2491,7 +2494,7 @@ onMounted(() => {
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--bg-panel) 88%, var(--bg-hover));
   color: var(--text-primary);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   cursor: pointer;
   list-style: none;
 }
@@ -2542,7 +2545,7 @@ onMounted(() => {
   border-radius: 8px;
   background: var(--bg-panel);
   color: var(--text-primary);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   text-align: left;
 }
 

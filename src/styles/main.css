@@ -305,6 +305,52 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
+.ledger-page-shell {
+  background: transparent;
+}
+
+.ledger-flow {
+  display: grid;
+  gap: var(--section-gap);
+}
+
+.ledger-band {
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface-muted);
+}
+
+.ledger-row-list {
+  display: grid;
+  border-top: 1px solid var(--divider);
+}
+
+.ledger-row {
+  display: grid;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.ledger-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  background: var(--surface-muted);
+}
+
+.ledger-stat-strip > * {
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-right: 1px solid var(--divider);
+}
+
+.ledger-stat-strip > *:last-child {
+  border-right: 0;
+}
+
 .panel-head,
 .section-head,
 .page-head,

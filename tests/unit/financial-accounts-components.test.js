@@ -101,8 +101,9 @@ describe('financial accounts component refactor', () => {
     expect(structure).toContain('background: transparent')
     expect(structure).toContain('border-color: transparent')
     expect(structure).not.toContain('background: var(--bg-shell')
-    expect(structure).toContain('background: var(--gradient-panel)')
-    expect(structure).toContain('box-shadow: var(--shadow-card)')
+    expect(structure).toContain('ledger-page-shell')
+    expect(structure).toContain('ledger-workspace')
+    expect(structure).toContain('box-shadow: none')
     expect(structure).toContain('top: calc(68px + 1rem)')
   })
 
@@ -112,7 +113,7 @@ describe('financial accounts component refactor', () => {
 
     expect(structure).toContain('grid-template-columns: minmax(300px, 0.32fr) minmax(0, 0.68fr);')
     expect(structure).toContain('grid-template-columns: minmax(0, 1fr) minmax(280px, 0.28fr);')
-    expect(structure).toContain('class="accounts-layout"')
+    expect(structure).toContain('class="accounts-layout ledger-workspace"')
     expect(structure).toContain('class="accounts-sidebar"')
     expect(structure).toContain('class="accounts-main"')
     expect(structure).toContain('class="accounts-context-panel"')
