@@ -74,12 +74,14 @@ const exists = (file) => fs.existsSync(file)
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const blockFor = (source, selector) => {
   const selectorPattern = escapeRegex(selector)
-  const rulePattern = new RegExp(`(?:^|[{}])\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
+  const selectorBoundary = '(?=$|[\\s,.:>+~\\[\\)#\\{])'
+  const rulePattern = new RegExp(`(?=(?:^|[{}])\\s*([^{}]*?${selectorPattern}${selectorBoundary}[^{}]*)\\{([^{}]*)\\})`, 'g')
   const blocks = []
   let match
 
   while ((match = rulePattern.exec(source)) !== null) {
     blocks.push(`${match[1]} {${match[2]}}`)
+    rulePattern.lastIndex += 1
   }
 
   return blocks.join('\n')
