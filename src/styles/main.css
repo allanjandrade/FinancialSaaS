@@ -249,16 +249,16 @@ textarea:focus-visible {
   font-weight: 900;
 }
 
-/* Shared dashboard surfaces */
+/* Fluid Ledger global surfaces */
 .panel,
 .summary-card,
 .dashboard-panel,
 .app-card {
   position: relative;
-  background: var(--gradient-panel);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: var(--surface-ledger);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -267,6 +267,15 @@ textarea:focus-visible {
 .dashboard-panel::before,
 .app-card::before {
   display: none;
+}
+
+.metric-card,
+.kpi-card {
+  position: relative;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .money,
@@ -284,7 +293,7 @@ textarea:focus-visible {
 .app-card,
 .metric-card,
 .kpi-card {
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
 .summary-card:hover,
@@ -292,8 +301,8 @@ textarea:focus-visible {
 .app-card:hover,
 .metric-card:hover,
 .kpi-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 18%, var(--border-color));
-  box-shadow: var(--shadow-card-hover);
+  border-color: var(--divider-strong);
+  box-shadow: none;
 }
 
 .panel-head,
@@ -708,15 +717,15 @@ textarea {
   .summary-card,
   .dashboard-panel,
   .app-card {
-    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    transition: border-color 180ms ease, background 180ms ease;
   }
 
   .panel:hover,
   .summary-card:hover,
   .dashboard-panel:hover,
   .app-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-card-hover);
+    border-color: var(--divider-strong);
+    box-shadow: none;
   }
 }
 
