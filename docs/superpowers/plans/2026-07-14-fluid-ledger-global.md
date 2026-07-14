@@ -437,7 +437,7 @@ Create `src/components/layout/LedgerPage.vue`:
 
 ```vue
 <template>
-  <main class="ledger-page" :data-testid="testid || undefined">
+  <div class="ledger-page" :data-testid="testid || undefined">
     <header v-if="title || eyebrow || description || $slots.actions" class="ledger-page__header">
       <div>
         <p v-if="eyebrow" class="ledger-page__eyebrow">{{ eyebrow }}</p>
@@ -449,7 +449,7 @@ Create `src/components/layout/LedgerPage.vue`:
       </div>
     </header>
     <slot />
-  </main>
+  </div>
 </template>
 
 <script setup>
