@@ -177,6 +177,21 @@ describe('financial accounts component refactor', () => {
     expect(tabs).not.toContain('background: var(--bg-hover);')
   })
 
+  it('keeps the accounts more menu visually aligned with premium tabs', () => {
+    const accountTabs = readComponent('AccountsTabs.vue')
+
+    expect(accountTabs).toContain('aria-haspopup="menu"')
+    expect(accountTabs).toContain(':aria-expanded="moreMenuOpen"')
+    expect(accountTabs).toContain('role="menu"')
+    expect(accountTabs).toContain('role="menuitemradio"')
+    expect(accountTabs).toContain('more-current')
+    expect(accountTabs).toContain('overflow: visible')
+    expect(accountTabs).toContain('backdrop-filter: blur(16px)')
+    expect(accountTabs).toContain('.accounts-tab-menu::before')
+    expect(accountTabs).not.toContain('<details')
+    expect(accountTabs).not.toContain('<summary')
+  })
+
   it('keeps financial structure tabs reflected in the route query', () => {
     const structure = fs.readFileSync('src/views/FinancialStructure.vue', 'utf8')
 
