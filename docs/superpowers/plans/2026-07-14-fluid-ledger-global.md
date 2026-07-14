@@ -74,7 +74,7 @@ const exists = (file) => fs.existsSync(file)
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const blockFor = (source, selector) => {
   const selectorPattern = escapeRegex(selector)
-  const rulePattern = new RegExp(`(?:^|})\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
+  const rulePattern = new RegExp(`(?:^|[{}])\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
   const blocks = []
   let match
 
@@ -1402,12 +1402,14 @@ For each remaining acceptable static visual card in migrated pages, add one of t
 <!-- Fluid ledger exception: repeated service identity item with logo and contextual actions. -->
 ```
 
-- [ ] **Step 3: Strengthen the ledger test against broad card regressions**
+- [ ] **Step 3: Add an additional shadow-only regression check**
+
+This complements the scoped motion and hover-shadow checks in the Task 1 contract by adding a final shadow-only scan for static surfaces.
 
 In `tests/unit/fluid-ledger-global.test.js`, add:
 
 ```js
-  it('does not reintroduce broad raised-card styling on static surfaces', () => {
+  it('does not reintroduce raised-card shadows on static surfaces', () => {
     const source = [
       read('src/styles/main.css'),
       read('src/styles/layout.css'),

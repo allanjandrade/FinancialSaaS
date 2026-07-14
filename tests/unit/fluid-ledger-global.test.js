@@ -6,7 +6,7 @@ const exists = (file) => fs.existsSync(file)
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const blockFor = (source, selector) => {
   const selectorPattern = escapeRegex(selector)
-  const rulePattern = new RegExp(`(?:^|})\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
+  const rulePattern = new RegExp(`(?:^|[{}])\\s*([^{}]*${selectorPattern}[^{}]*)\\{([^{}]*)\\}`, 'g')
   const blocks = []
   let match
 
