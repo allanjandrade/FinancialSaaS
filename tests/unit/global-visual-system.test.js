@@ -38,13 +38,15 @@ describe('global visual system contract', () => {
     expect(main).toContain('.route-view > :is(')
     expect(main).toContain('.page-head')
     expect(main).toContain('.section-title')
+    expect(main).toContain('/* Fluid Ledger global surfaces */')
     expect(main).toContain('.panel,')
     expect(main).toContain('.app-card')
-    expect(main).toContain('background: var(--gradient-panel)')
+    expect(main).toContain('background: var(--surface-ledger)')
+    expect(main).toContain('box-shadow: none')
     expect(pageShell).toContain('gap: var(--section-gap)')
     expect(pageShell).toContain('align-content: start')
     expect(pageHeader).toContain('background: transparent')
-    expect(pageHeader).toContain('border-bottom: 1px solid var(--border-color)')
+    expect(pageHeader).toContain('border-bottom: 1px solid var(--divider)')
   })
 
   it('centralizes button hierarchy across legacy and new pages', () => {
@@ -96,7 +98,7 @@ describe('global visual system contract', () => {
     expect(legalShell).toContain('var(--public-surface)')
 
     expect(notFound).toContain('class="not-found-card"')
-    expect(notFound).toContain('background: var(--bg-panel)')
-    expect(notFound).toContain('box-shadow: var(--shadow-card)')
+    expect(notFound).toContain('background: var(--surface-ledger)')
+    expect(notFound).not.toContain('box-shadow: var(--shadow-card)')
   })
 })
