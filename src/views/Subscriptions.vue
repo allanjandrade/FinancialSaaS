@@ -429,9 +429,7 @@ const sourceOptions = computed(() => {
   ;(financeStore.state.financialAccounts || []).forEach((account) => {
     options.push({ key: `account:${account.id}`, label: `${account.name} · conta`, type: 'account', id: account.id })
   })
-  ;(financeStore.state.benefitWallets || []).forEach((benefit) => {
-    options.push({ key: `benefit:${benefit.id}`, label: `${benefit.name} · benefício`, type: 'benefit', id: benefit.id })
-  })
+  options.push({ key: 'benefit:', label: 'Benefício', type: 'benefit', id: '' })
   return options
 })
 
@@ -586,7 +584,7 @@ function closeForm() {
 function sourceKeyFor(item) {
   if (item.card_id) return `card:${item.card_id}`
   if (item.account_id) return `account:${item.account_id}`
-  if (item.payment_method_type === 'benefit') return `benefit:${item.benefit_id || ''}`
+  if (item.payment_method_type === 'benefit') return 'benefit:'
   return `${item.payment_method_type || 'other'}:`
 }
 
