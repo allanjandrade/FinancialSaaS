@@ -26,7 +26,7 @@ describe('product search presentation helpers', () => {
     expect(productSearchStatus(item)).toMatchObject({
       label: 'Produto confirmado',
       tone: 'success',
-      description: 'Identidade confirmada e oferta compativel encontrada.',
+      description: 'Identidade confirmada e oferta compatível encontrada.',
     })
     expect(canonicalProductCode(item)).toBe('amazon · B0B3BHT71L')
     expect(totalComparablePrice(item)).toBe(219.8)
@@ -185,8 +185,8 @@ describe('product search presentation helpers', () => {
   })
 
   it('returns friendly states for pending, not found and error statuses', () => {
-    expect(productSearchStatus({ priceStatus: 'pending_quote' }).label).toBe('Buscando preco')
-    expect(productSearchStatus({ price_search_status: 'not_found' }).label).toBe('Nenhuma oferta compativel')
+    expect(productSearchStatus({ priceStatus: 'pending_quote' }).label).toBe('Buscando preço')
+    expect(productSearchStatus({ price_search_status: 'not_found' }).label).toBe('Nenhuma oferta compatível')
     expect(productSearchStatus({ price_search_status: 'error' }).label).toBe('Erro ao atualizar')
     expect(productSearchStatus({ monitorPrice: true, priceStatus: 'quoted' }).label).toBe('Monitorando')
   })

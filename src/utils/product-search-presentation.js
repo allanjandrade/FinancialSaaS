@@ -137,7 +137,7 @@ export function productSearchStatus(item) {
     return {
       label: 'Precisa revisar',
       tone: 'danger',
-      description: 'Nao conseguimos confirmar que este link corresponde ao produto correto.',
+      description: 'Não conseguimos confirmar que este link corresponde ao produto correto.',
     }
   }
 
@@ -145,7 +145,7 @@ export function productSearchStatus(item) {
     return {
       label: 'Erro ao atualizar',
       tone: 'danger',
-      description: 'Nao foi possivel atualizar os precos agora.',
+      description: 'Não foi possível atualizar os preços agora.',
     }
   }
 
@@ -153,7 +153,7 @@ export function productSearchStatus(item) {
     return {
       label: 'Produto confirmado',
       tone: 'success',
-      description: 'Identidade confirmada e oferta compativel encontrada.',
+      description: 'Identidade confirmada e oferta compatível encontrada.',
     }
   }
 
@@ -167,9 +167,9 @@ export function productSearchStatus(item) {
 
   if (status === 'not_found') {
     return {
-      label: 'Nenhuma oferta compativel',
+      label: 'Nenhuma oferta compatível',
       tone: 'warning',
-      description: 'Ainda nao encontramos uma oferta compativel para este produto.',
+      description: 'Ainda não encontramos uma oferta compatível para este produto.',
     }
   }
 
@@ -182,7 +182,7 @@ export function productSearchStatus(item) {
   }
 
   return {
-    label: 'Buscando preco',
+    label: 'Buscando preço',
     tone: 'pending',
     description: 'Estamos buscando ofertas compativeis para este produto.',
   }
