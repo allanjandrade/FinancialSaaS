@@ -78,7 +78,7 @@
           </article>
           <article>
             <span>Compras</span>
-            <strong>Com criterio</strong>
+            <strong>Com critério</strong>
           </article>
         </div>
         <p>Use metas, orçamento, alertas e compras planejadas para entender melhor seu mês.</p>

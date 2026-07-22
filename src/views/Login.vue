@@ -7,7 +7,7 @@
         <BrandMark />
         <p class="eyebrow">Acesso seguro</p>
         <h1 id="login-title">Entre na sua conta</h1>
-        <p class="lead">Acesse seu painel financeiro e acompanhe suas decisoes com mais clareza.</p>
+        <p class="lead">Acesse seu painel financeiro e acompanhe suas decisões com mais clareza.</p>
 
         <GoogleLoginButton v-if="googleAuthEnabled" class="oauth-button" :disabled="loading" @click="handleGoogle">
           Continuar com Google
@@ -50,8 +50,8 @@
 
         <div class="auth-proof-grid" aria-label="Recursos do painel financeiro">
           <article>
-            <span>Mes atual</span>
-            <strong>Visao clara</strong>
+            <span>Mês atual</span>
+            <strong>Visão clara</strong>
           </article>
           <article>
             <span>Alertas</span>

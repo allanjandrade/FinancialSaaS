@@ -76,4 +76,16 @@ describe('public visual contrast contract', () => {
     expect(login).toContain('.auth-shell { grid-template-columns: 1fr; }')
     expect(login).not.toContain('color: var(--text-primary);')
   })
+
+  it('keeps migrated public and auth copy accented in PT-BR', () => {
+    const source = [
+      fs.readFileSync('src/views/public/Landing.vue', 'utf8'),
+      fs.readFileSync('src/views/Login.vue', 'utf8'),
+      fs.readFileSync('src/views/Signup.vue', 'utf8'),
+    ].join('\n')
+
+    for (const term of ['Governanca', 'decisoes', 'Mes atual', 'Visao', 'criterio']) {
+      expect(source).not.toContain(term)
+    }
+  })
 })

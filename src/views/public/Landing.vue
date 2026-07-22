@@ -59,7 +59,7 @@
         <p>Acompanhe saldo, compromissos, risco e próximas ações com hierarquia clara para tomada de decisão.</p>
       </article>
       <article class="feature-card ledger-row">
-        <h2>Governanca operacional</h2>
+        <h2>Governança operacional</h2>
         <p>Use trilhas de auditoria, controles de acesso, suporte LGPD e confirmações antes de ações sensíveis.</p>
       </article>
       <article class="feature-card ledger-row">
