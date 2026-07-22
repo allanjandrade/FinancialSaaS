@@ -956,8 +956,11 @@ textarea {
   gap: 0.75rem;
 }
 
+.category-groups.ledger-row-list {
+  gap: 0;
+}
+
 .alert-row,
-.subscription-row,
 .insight-panel dl div {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -993,10 +996,15 @@ textarea {
 }
 
 .subscription-row {
-  padding: 0.95rem;
+  padding: 0.85rem 0;
   display: grid;
   gap: 0.7rem;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  border: 0;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
 .subscription-row:hover {

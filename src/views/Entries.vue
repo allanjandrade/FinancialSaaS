@@ -1544,7 +1544,7 @@ onMounted(() => {
 .entries-premium-rail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0;
   margin-bottom: 1rem;
 }
 
@@ -1553,9 +1553,9 @@ onMounted(() => {
   display: grid;
   gap: 0.25rem;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-panel) 88%, var(--bg-hover));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
 }
 
@@ -1588,16 +1588,16 @@ onMounted(() => {
   font-size: 0.78rem;
 }
 
-.entry-rail-card.income {
-  border-color: color-mix(in srgb, var(--income) 24%, var(--border-color));
+.entry-rail-card.income strong {
+  color: var(--income);
 }
 
-.entry-rail-card.expense {
-  border-color: rgba(239, 68, 68, 0.24);
+.entry-rail-card.expense strong {
+  color: var(--expense);
 }
 
-.entry-rail-card.neutral {
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color));
+.entry-rail-card.neutral strong {
+  color: var(--accent);
 }
 
 .entries-header h1,

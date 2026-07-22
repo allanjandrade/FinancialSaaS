@@ -10,6 +10,22 @@ function readComponent(file) {
   return fs.readFileSync(path.join(componentDir, file), 'utf8')
 }
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function blockFor(source, selector) {
+  const selectorPattern = escapeRegex(selector)
+  const selectorBoundary = '(?=$|[\\s,.:>+~\\[\\)#\\{])'
+  const rulePattern = new RegExp(`(?=(?:^|[{}])\\s*([^{}]*?${selectorPattern}${selectorBoundary}[^{}]*)\\{([^{}]*)\\})`, 'g')
+  const blocks = []
+  let match
+
+  while ((match = rulePattern.exec(source)) !== null) {
+    blocks.push(`${match[1]} {${match[2]}}`)
+    rulePattern.lastIndex += 1
+  }
+
+  return blocks.join('\n')
+}
+
 describe('financial accounts component refactor', () => {
   it('extracts the account screen surface into isolated components', () => {
     const files = [
@@ -103,7 +119,11 @@ describe('financial accounts component refactor', () => {
     expect(structure).not.toContain('background: var(--bg-shell')
     expect(structure).toContain('ledger-page-shell')
     expect(structure).toContain('ledger-workspace')
-    expect(structure).toContain('box-shadow: none')
+    expect(blockFor(structure, '.panel')).toContain('background: transparent')
+    expect(blockFor(structure, '.panel')).toContain('box-shadow: none')
+    expect(blockFor(structure, '.panel')).not.toContain('box-shadow: var(--shadow-card)')
+    expect(blockFor(structure, '.accounts-entry-panel')).toContain('background: transparent')
+    expect(blockFor(structure, '.accounts-entry-panel')).not.toContain('box-shadow: var(--shadow-card)')
     expect(structure).toContain('top: calc(68px + 1rem)')
   })
 
