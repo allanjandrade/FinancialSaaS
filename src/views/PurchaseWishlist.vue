@@ -336,10 +336,17 @@ async function refresh(item) {
 
 <style scoped>
 .wishlist-page { max-width: 1180px; margin: 0 auto; padding: 1rem 1.25rem 2rem; display: grid; gap: 1rem; }
-.page-head, .empty-panel, .wish-card, .section-title {
+.page-head, .empty-panel, .section-title {
+  background: var(--surface-ledger);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+/* Fluid ledger exception: repeated product/result tile. */
+.wish-card {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-card);
 }
 .page-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem; }

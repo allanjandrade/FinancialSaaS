@@ -429,11 +429,11 @@ onMounted(async () => {
 <style scoped>
 .purchase-page { max-width: 1080px; margin: 0 auto; padding: 1rem 1.25rem 2rem; display: grid; gap: 1rem; }
 .purchase-hero, .purchase-shell, .review-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: var(--surface-ledger);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-sm);
   padding: 1rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 .purchase-hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .purchase-hero h1, .review-heading h2 { margin: 0.15rem 0; }

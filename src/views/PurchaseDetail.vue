@@ -277,10 +277,10 @@ function formatDate(value) {
 .detail-page { max-width: 1180px; margin: 0 auto; padding: 1rem 1.25rem 2rem; display: grid; gap: 1rem; }
 .back-link { color: var(--accent-hover); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; }
 .product-panel, .panel, .empty-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: var(--shadow-card);
+  background: var(--surface-ledger);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
 }
 .product-panel { display: grid; grid-template-columns: 280px minmax(0, 1fr); overflow: hidden; }
 .product-media { min-height: 280px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }

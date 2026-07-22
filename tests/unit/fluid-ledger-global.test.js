@@ -18,6 +18,18 @@ const blockFor = (source, selector) => {
 
   return blocks.join('\n')
 }
+const surfaceBlockFor = (source, selector) => blockFor(source, selector)
+  .split('\n')
+  .filter((block) => {
+    const header = block.split('{')[0]
+    return header.split(',').some((part) => {
+      const trimmed = part.trim()
+      if (!trimmed.startsWith(selector)) return false
+      const rest = trimmed.slice(selector.length)
+      return !/[ >+~]/.test(rest)
+    })
+  })
+  .join('\n')
 
 describe('fluid ledger global redesign', () => {
   it('defines ledger surface tokens and neutralizes raised card defaults', () => {
@@ -135,10 +147,31 @@ describe('fluid ledger global redesign', () => {
       read('src/views/FinancialStructure.vue'),
       read('src/views/public/Landing.vue'),
       read('src/views/public/Pricing.vue'),
+      read('src/views/PurchaseDetail.vue'),
+      read('src/views/PurchaseNew.vue'),
+      read('src/views/PurchaseWishlist.vue'),
     ].join('\n')
 
-    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.metric-card', '.kpi-card']) {
-      const surfaceBlocks = blockFor(source, selector)
+    const staticSelectors = [
+      '.panel',
+      '.summary-card',
+      '.dashboard-panel',
+      '.metric-card',
+      '.kpi-card',
+      '.app-card',
+      '.feature-card',
+      '.trust-card',
+      '.first-step-card',
+      '.purchase-hero',
+      '.purchase-shell',
+      '.review-panel',
+      '.empty-panel',
+      '.page-head',
+      '.section-title',
+    ]
+
+    for (const selector of staticSelectors) {
+      const surfaceBlocks = surfaceBlockFor(source, selector)
       expect(surfaceBlocks, `${selector} should stay flat on static surfaces`).not.toContain('box-shadow: var(--shadow-card)')
       expect(surfaceBlocks, `${selector} should stay still on static surfaces`).not.toContain('transform: translateY(-')
     }
