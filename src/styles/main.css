@@ -178,6 +178,10 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.ledger-auth-page .auth-shell--single .auth-form-card {
+  border-right: 0;
+}
+
 .ledger-auth-page .auth-panel-card {
   border: 0;
   background: transparent;

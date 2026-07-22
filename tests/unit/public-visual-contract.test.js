@@ -48,6 +48,8 @@ describe('public visual contrast contract', () => {
     expect(landing).toContain('ledger-row-list')
     expect(pricing).toContain('ledger-pricing-table')
     expect(pricing).toContain('ledger-pricing-row')
+    expect(pricing).toContain('class="price-stack"')
+    expect(pricing).toContain('.price-stack')
     expect(landing).toContain('grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr)')
     expect(landing).toContain('align-items: center')
     expect(landing).toContain('grid-auto-rows: 1fr')

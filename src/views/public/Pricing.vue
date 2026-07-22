@@ -44,8 +44,10 @@
             <h2>Premium anual</h2>
             <p>Mesmo controle Premium com previsibilidade de custo anual.</p>
           </div>
-          <strong>R$ 16,58/mês</strong>
-          <small>R$ 199,00 cobrados ao ano</small>
+          <div class="price-stack">
+            <strong>R$ 16,58/mês</strong>
+            <small>R$ 199,00 cobrados ao ano</small>
+          </div>
           <ul>
             <li>Melhor custo-benefício</li>
             <li>Mesmos recursos do Premium mensal</li>
@@ -171,6 +173,11 @@ small {
 
 strong {
   font-size: 1.65rem;
+}
+
+.price-stack {
+  display: grid;
+  gap: 0.2rem;
 }
 
 .plan-badge {
