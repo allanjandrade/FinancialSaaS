@@ -5,41 +5,41 @@
 
     <section class="pricing-shell">
       <p class="eyebrow">Planos</p>
-      <h1>Escolha o nivel de controle financeiro para sua operacao.</h1>
+      <h1>Escolha o nível de controle financeiro para sua operação.</h1>
       <p class="lead">
-        Compare limites, inteligencia e governanca antes de liberar recursos para o time.
-        Todos os planos mantem experiencia operacional clara e rotas publicas de conformidade.
+        Compare limites, inteligência e governança antes de liberar recursos para o time.
+        Todos os planos mantêm experiência operacional clara e rotas públicas de conformidade.
       </p>
 
-      <section class="plans" aria-label="Comparacao de planos">
-        <article>
+      <section class="plans ledger-pricing-table" aria-label="Comparação de planos">
+        <article class="ledger-pricing-row">
           <div>
-            <h2>Gratis</h2>
+            <h2>Grátis</h2>
             <p>Controle inicial para validar o fluxo financeiro sem compromisso.</p>
           </div>
           <strong>R$ 0</strong>
           <ul>
-            <li>Lancamentos manuais</li>
-            <li>Relatorio mensal basico</li>
+            <li>Lançamentos manuais</li>
+            <li>Relatório mensal básico</li>
             <li>Wishlist e buscas com limites reduzidos</li>
           </ul>
           <router-link to="/signup" class="secondary">Criar conta</router-link>
         </article>
-        <article class="featured">
+        <article class="ledger-pricing-row featured">
           <div>
             <span class="plan-badge">Recomendado</span>
             <h2>Premium mensal</h2>
-            <p>Operacao recorrente com analises, simulacoes, alertas e recomendacoes.</p>
+            <p>Operação recorrente com análises, simulações, alertas e recomendações.</p>
           </div>
           <strong>R$ 19,90/mês</strong>
           <ul>
             <li>Consultor financeiro completo</li>
-            <li>Simulacoes e relatorios avancados</li>
+            <li>Simulações e relatórios avançados</li>
             <li>Busca e wishlist ampliadas</li>
           </ul>
           <router-link to="/signup" class="primary">Assinar Premium</router-link>
         </article>
-        <article>
+        <article class="ledger-pricing-row">
           <div>
             <h2>Premium anual</h2>
             <p>Mesmo controle Premium com previsibilidade de custo anual.</p>
@@ -47,9 +47,9 @@
           <strong>R$ 16,58/mês</strong>
           <small>R$ 199,00 cobrados ao ano</small>
           <ul>
-            <li>Melhor custo-beneficio</li>
+            <li>Melhor custo-benefício</li>
             <li>Mesmos recursos do Premium mensal</li>
-            <li>Cobranca anual simplificada</li>
+            <li>Cobrança anual simplificada</li>
           </ul>
           <router-link to="/signup" class="primary">Assinar Premium</router-link>
         </article>
@@ -71,10 +71,19 @@ import PublicHeader from '@/components/public/PublicHeader.vue'
 
 <style scoped>
 .pricing-page {
+  --public-page-bg: #f8fafc;
+  --public-surface: #ffffff;
+  --public-text-primary: #0f172a;
+  --public-text-secondary: #475569;
+  --public-border: #e2e8f0;
+  --public-border-strong: #cbd5e1;
+  --auth-background: var(--public-page-bg);
+  --auth-grid-line: rgba(15, 23, 42, .04);
   position: relative;
   min-height: 100vh;
   padding: 1.25rem;
-  color: var(--text-primary);
+  background: var(--public-page-bg);
+  color: var(--public-text-primary);
 }
 
 .pricing-shell {
@@ -94,7 +103,7 @@ footer {
 }
 
 a {
-  color: var(--text-secondary);
+  color: var(--public-text-secondary);
   text-decoration: none;
   font-weight: 800;
 }
@@ -104,13 +113,19 @@ a {
   color: var(--accent);
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--eyebrow-letter-spacing);
 }
 
 h1,
 h2,
 p {
   margin: 0;
+}
+
+h1,
+h2,
+strong {
+  color: var(--public-text-primary);
 }
 
 h1 {
@@ -121,36 +136,36 @@ h1 {
 
 .lead {
   max-width: 760px;
-  color: var(--text-secondary);
+  color: var(--public-text-secondary);
   line-height: 1.7;
 }
 
 .plans {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
   margin-top: 1rem;
+  border-top: 1px solid var(--public-border);
 }
 
-article {
+.ledger-pricing-row {
   display: grid;
-  gap: 0.85rem;
-  align-content: start;
-  padding: 1.2rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background: var(--bg-panel);
-  box-shadow: var(--shadow-card);
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.32fr) minmax(220px, 0.5fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--public-border);
+  background: transparent;
+  box-shadow: none;
 }
 
-article.featured {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border-color));
-  box-shadow: var(--shadow-card-hover);
+.ledger-pricing-row.featured {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--public-border));
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  box-shadow: none;
 }
 
 article p,
 small {
-  color: var(--text-secondary);
+  color: var(--public-text-secondary);
   line-height: 1.55;
 }
 
@@ -177,11 +192,11 @@ strong {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--public-border-strong);
   border-radius: var(--radius-sm);
   padding: 0.78rem 1rem;
-  background: var(--bg-panel);
-  color: var(--text-primary);
+  background: var(--public-surface);
+  color: var(--public-text-primary);
   font-weight: 900;
 }
 
@@ -196,18 +211,24 @@ ul {
   gap: 0.45rem;
   margin: 0;
   padding-left: 1.1rem;
-  color: var(--text-secondary);
+  color: var(--public-text-secondary);
   line-height: 1.5;
 }
 
 footer {
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--public-border);
 }
 
 @media (max-width: 720px) {
   h1 {
     font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 820px) {
+  .ledger-pricing-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -162,6 +162,32 @@ textarea:focus-visible {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.auth-page.ledger-auth-page {
+  background: var(--public-page-bg);
+}
+
+.ledger-auth-page .auth-form-card,
+.ledger-auth-page .auth-panel-card {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ledger-auth-page .auth-form-card {
+  border: 0;
+  border-right: 1px solid var(--public-border);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.ledger-auth-page .auth-panel-card {
+  border: 0;
+  background: transparent;
+}
+
+.ledger-auth-page .auth-proof-grid article {
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .auth-form-card,
 .auth-panel-card {
   border: 1px solid var(--public-border);

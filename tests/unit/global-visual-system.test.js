@@ -20,6 +20,8 @@ describe('global visual system contract', () => {
     expect(sharedStyles).toContain('.auth-panel-card')
     expect(sharedStyles).toContain('.auth-proof-grid')
     expect(sharedStyles).toContain('.auth-shell--single')
+    expect(sharedStyles).toContain('.auth-page.ledger-auth-page')
+    expect(sharedStyles).toContain('.ledger-auth-page .auth-form-card')
 
     for (const file of authFiles) {
       const source = read(file)
