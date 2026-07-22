@@ -79,4 +79,7 @@ supabase/.branches/
 .cypress-user-data*/
 .cypress-appdata*/
 .npm-cache*/
+cypress/downloads/
+cypress/screenshots/
+cypress/videos/
 tmp/

@@ -7,13 +7,13 @@
 
     <section v-if="!item" class="empty-panel">
       <Package :size="42" />
-      <h1>Produto nao encontrado</h1>
+      <h1>Produto não encontrado</h1>
     </section>
 
     <template v-else>
       <section class="product-panel">
         <div class="product-media">
-          <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" />
+          <img v-if="safeImageUrl(item.imageUrl)" :src="safeImageUrl(item.imageUrl)" :alt="item.name" />
           <Package v-else :size="48" />
         </div>
         <div class="product-main">
@@ -30,15 +30,15 @@
 
           <div class="hero-metrics">
             <div>
-              <span>Preco atual</span>
-              <strong>{{ comparableTotal ? formatCurrency(comparableTotal) : 'Nao encontrado' }}</strong>
+              <span>Preço atual</span>
+              <strong>{{ comparableTotal ? formatCurrency(comparableTotal) : 'Não encontrado' }}</strong>
             </div>
             <div>
-              <span>Menor historico</span>
-              <strong>{{ historySummary.lowest ? formatCurrency(historySummary.lowest) : 'Sem historico' }}</strong>
+              <span>Menor histórico</span>
+              <strong>{{ historySummary.lowest ? formatCurrency(historySummary.lowest) : 'Sem histórico' }}</strong>
             </div>
             <div>
-              <span>Decisao financeira</span>
+              <span>Decisão financeira</span>
               <strong>{{ analysis ? (analysis.buyTodayRecommended ? 'Comprar' : 'Aguardar') : 'Pendente' }}</strong>
             </div>
           </div>
@@ -46,10 +46,18 @@
           <div class="action-row">
             <button class="secondary-button" type="button" :disabled="refreshing" @click="refresh">
               <RefreshCcw :size="16" />
-              {{ refreshing ? 'Atualizando...' : 'Atualizar precos' }}
+              {{ refreshing ? 'Atualizando...' : 'Atualizar preços' }}
             </button>
-            <a v-if="item.canonicalUrl || item.originalLink" class="primary-button" :href="item.canonicalUrl || item.originalLink" target="_blank" rel="noopener">
-              Ver anuncio
+            <a
+              v-if="purchaseLink.href"
+              class="primary-button"
+              data-testid="purchase-detail-buy-link"
+              :href="purchaseLink.href"
+              target="_blank"
+              rel="noopener"
+            >
+              <ExternalLink :size="16" />
+              {{ purchaseLink.label }}
             </a>
             <button v-if="compatibleRequired || rejectedCandidates.length" class="secondary-button" type="button" @click="showRejected = !showRejected">
               Ver rejeitados
@@ -58,28 +66,28 @@
           <div v-if="item.identity_locked" class="identity-box">
             <span>Produto</span>
             <strong>{{ item.name }}</strong>
-            <small>Codigo canonico: {{ canonicalCode }}</small>
-            <small>URL canonica: {{ item.canonicalUrl || item.originalLink || 'Nao informada' }}</small>
+            <small>Código canônico: {{ canonicalCode }}</small>
+            <small>URL canônica: {{ item.canonicalUrl || item.originalLink || 'Não informada' }}</small>
           </div>
           <p v-if="compatibleRequired && !compatiblePriceReady" class="identity-warning">
-            Ainda nao encontramos uma oferta compativel para este produto. Produtos parecidos ficam separados e nao entram como melhor preco.
+            Ainda não encontramos uma oferta compatível para este produto. Produtos parecidos ficam separados e não entram como melhor preço.
           </p>
         </div>
       </section>
 
       <section class="grid-two">
         <article class="panel">
-          <h2>Decisao financeira</h2>
+          <h2>Decisão financeira</h2>
           <div v-if="analysis" class="decision-box" :class="analysis.buyTodayRecommended ? 'ok' : 'wait'">
             <strong>{{ analysis.status }}</strong>
             <p>{{ analysis.recommendation }}</p>
             <p>{{ analysis.strategy }}</p>
           </div>
-          <p v-else class="muted">A decisao financeira sera calculada quando houver preco compativel identificado.</p>
+          <p v-else class="muted">A decisão financeira será calculada quando houver preço compatível identificado.</p>
         </article>
 
         <article class="panel">
-          <h2>Preco</h2>
+          <h2>Preço</h2>
           <div v-if="intelligence.decision === 'price_identity_pending'" class="decision-box wait">
             <strong>Compatibilidade pendente</strong>
             <p>{{ intelligence.message }}</p>
@@ -100,7 +108,7 @@
 
       <section class="grid-two">
         <article class="panel">
-          <h2>Historico</h2>
+          <h2>Histórico</h2>
           <div v-if="historyRows.length" class="history">
             <article v-for="snap in historyRows" :key="snap.at" class="history-entry">
               <div class="history-head">
@@ -116,16 +124,16 @@
                     <small v-if="offer.title">{{ offer.title }}</small>
                   </div>
                   <strong>{{ formatCurrency(offer.total) }}</strong>
-                  <a v-if="offer.url" :href="offer.url" target="_blank" rel="noopener">Comprar</a>
-                  <span v-else class="muted">Link indisponivel</span>
+                  <a v-if="purchaseOfferUrl(offer)" :href="purchaseOfferUrl(offer)" target="_blank" rel="noopener">Comprar</a>
+                  <span v-else class="muted">Link indisponível</span>
                 </div>
               </div>
             </article>
           </div>
-          <p v-else class="muted">Nenhum preco compativel encontrado ainda.</p>
+          <p v-else class="muted">Nenhum preço compatível encontrado ainda.</p>
           <details v-if="rejectedCandidates.length" :open="showRejected" class="rejected-box" @toggle="showRejected = $event.target.open">
             <summary>Compatibilidade</summary>
-            <p>Ignoramos estes produtos porque nao parecem compativeis com o item cadastrado.</p>
+            <p>Ignoramos estes produtos porque não parecem compatíveis com o item cadastrado.</p>
             <article v-for="candidate in rejectedCandidates" :key="`${candidate.title}-${candidate.total}`" class="rejected-row">
               <span>{{ candidate.title }}</span>
               <strong>{{ formatCurrency(candidate.total || candidate.price) }}</strong>
@@ -153,19 +161,19 @@
         <div class="section-head">
           <div>
             <p class="eyebrow">Ofertas</p>
-            <h2>Ofertas compativeis</h2>
+            <h2>Ofertas compatíveis</h2>
           </div>
-          <span>{{ comparisonOffers.length }} melhor(es) oferta(s)</span>
+          <span>{{ comparisonOffersLabel }}</span>
         </div>
         <div v-if="!comparisonOffers.length" class="pending-box">
-          <p>Nenhum preco compativel encontrado ainda.</p>
+          <p>Nenhum preço compatível encontrado ainda.</p>
         </div>
         <div v-else class="offers-grid">
           <article v-for="offer in comparisonOffers" :key="`${offer.marketplace}-${offer.total}`" class="offer-card">
             <span>{{ offer.marketplace }}</span>
             <strong>{{ formatCurrency(offer.total || offer.totalPrice || offer.price) }}</strong>
             <p>{{ offer.title || offer.seller || 'Oferta encontrada' }}</p>
-            <a v-if="offer.url" :href="offer.url" target="_blank" rel="noopener">Abrir oferta</a>
+            <a v-if="purchaseOfferUrl(offer)" :href="purchaseOfferUrl(offer)" target="_blank" rel="noopener">Abrir oferta</a>
           </article>
         </div>
       </section>
@@ -176,17 +184,20 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Package, RefreshCcw } from 'lucide-vue-next'
+import { ArrowLeft, ExternalLink, Package, RefreshCcw } from 'lucide-vue-next'
 import { useNotification } from '@/composables/useNotification'
 import { usePurchaseWorkflow } from '@/composables/usePurchaseWorkflow.js'
 import { answerDecisionQuestion, formatCurrency } from '@/utils/financial-planner.js'
 import { hasCompatiblePrice, isAcceptedCompatibleOffer, requiresCompatiblePrice } from '@/utils/productIdentity.js'
+import { purchaseLinkForItem, purchaseOfferUrl } from '@/utils/purchase-link.js'
+import { normalizeImageUrl } from '@/utils/safe-url.js'
 import {
   canonicalProductCode,
   priceHistorySummary,
   productSearchStatus,
   totalComparablePrice,
 } from '@/utils/product-search-presentation.js'
+import { quantityLabel } from '@/utils/pt-br-copy.js'
 
 const route = useRoute()
 const { showToast } = useNotification()
@@ -212,9 +223,11 @@ const comparisonOffers = computed(() => [...offers.value]
   .filter((offer) => !compatibleRequired.value || isAcceptedCompatibleOffer(offer))
   .sort((a, b) => Number(a.total || a.totalPrice || a.price) - Number(b.total || b.totalPrice || b.price))
   .slice(0, 10))
+const comparisonOffersLabel = computed(() => quantityLabel(comparisonOffers.value.length, 'melhor oferta', 'melhores ofertas'))
 const best = computed(() => workflow.bestOffersFor(item.value))
 const analysis = computed(() => workflow.analysisFor(item.value))
 const intelligence = computed(() => workflow.intelligenceFor(item.value || {}))
+const purchaseLink = computed(() => purchaseLinkForItem(item.value || {}))
 const currentTopOffers = computed(() => [...offers.value]
   .filter((offer) => Number(offer.total || offer.totalPrice || offer.price || 0) > 0)
   .filter((offer) => !compatibleRequired.value || isAcceptedCompatibleOffer(offer))
@@ -243,9 +256,9 @@ async function refresh() {
   refreshing.value = true
   try {
     const updated = await workflow.refreshItemPrices(item.value)
-    showToast(updated.priceStatus === 'quoted' ? 'Preco compativel atualizado.' : 'Cotacao compativel pendente.', updated.priceStatus === 'quoted' ? 'success' : 'warning')
+    showToast(updated.priceStatus === 'quoted' ? 'Preço compatível atualizado.' : 'Cotação compatível pendente.', updated.priceStatus === 'quoted' ? 'success' : 'warning')
   } catch (error) {
-    showToast(error.message || 'Falha ao atualizar preco', 'error')
+    showToast(error.message || 'Falha ao atualizar preço', 'error')
   } finally {
     refreshing.value = false
   }
@@ -257,15 +270,19 @@ function ask(question) {
   customQuestion.value = ''
   const currentAnalysis = analysis.value || {
     buyTodayRecommended: false,
-    strategy: 'Aguardar cotacao',
-    recommendation: 'Ainda nao ha preco real para concluir a analise.',
+    strategy: 'Aguardar cotação',
+    recommendation: 'Ainda não há preço real para concluir a análise.',
     status: 'Compatibilidade pendente',
-    reasons: ['Cotacao pendente. Atualize precos para completar a analise.'],
+    reasons: ['Cotação pendente. Atualize preços para completar a análise.'],
     installments: [],
     savingsPlan: { months: 0 },
     monthlySavingNeeded: 0,
   }
   answer.value = answerDecisionQuestion(q, item.value, currentAnalysis, best.value)
+}
+
+function safeImageUrl(value) {
+  return normalizeImageUrl(value)
 }
 
 function formatDate(value) {
@@ -290,9 +307,9 @@ function formatDate(value) {
 .identity-box { display: grid; gap: 0.2rem; margin-top: 0.75rem; padding: 0.7rem 0; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
 .identity-box strong { color: var(--text-primary); overflow-wrap: anywhere; }
 .identity-box span, .identity-box small { font-size: 0.78rem; }
-.title-row h1 { margin: 0.15rem 0; font-size: 1.6rem; }
+.title-row h1 { margin: 0.15rem 0; font-family: var(--font-display); font-size: var(--page-title-size); font-weight: var(--page-title-weight); line-height: var(--page-title-line-height); letter-spacing: 0; }
 .title-row p, .muted, .offer-card p, .pending-box, .section-head span { color: var(--text-secondary); }
-.eyebrow { margin: 0; color: var(--accent-hover); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.eyebrow { margin: 0; color: var(--accent-hover); font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 700; letter-spacing: var(--eyebrow-letter-spacing); text-transform: uppercase; }
 .hero-metrics, .mini-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; margin: 1rem 0; }
 .mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .hero-metrics div, .mini-grid div, .offer-card, .pending-box {
