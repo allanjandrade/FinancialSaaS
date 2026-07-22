@@ -582,6 +582,7 @@ function closeDrawer() {
     gap: 0.35rem;
     border-top: 1px solid var(--border-color);
     background: var(--bg-panel);
+    /* Fluid ledger exception: modal or floating interaction surface. */
     box-shadow: var(--shadow-card);
   }
 
@@ -635,6 +636,7 @@ function closeDrawer() {
     border-radius: 12px 12px 0 0;
     border: 1px solid var(--border-strong);
     background: var(--bg-panel);
+    /* Fluid ledger exception: modal or floating interaction surface. */
     box-shadow: var(--shadow-card-hover);
     transform: translateY(105%);
     transition: transform 0.2s ease;

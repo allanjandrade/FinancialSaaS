@@ -60,7 +60,7 @@ defineProps({
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   background: var(--gradient-panel);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .operational-context__header {

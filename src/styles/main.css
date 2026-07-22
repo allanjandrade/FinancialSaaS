@@ -477,6 +477,7 @@ textarea:focus-visible {
 .btn-primary:hover:not(:disabled) {
   filter: saturate(1.05) brightness(1.02);
   box-shadow: 0 12px 28px -18px var(--accent);
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 
@@ -502,6 +503,7 @@ textarea:focus-visible {
 .btn-secondary:hover {
   background: var(--bg-hover);
   border-color: color-mix(in srgb, var(--accent) 22%, var(--border-color));
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 
@@ -636,6 +638,7 @@ button.ask-button:hover:not(:disabled),
 button.send-button:hover:not(:disabled),
 button.primary:hover:not(:disabled) {
   filter: saturate(1.05) brightness(1.02) !important;
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px) !important;
   box-shadow: 0 14px 32px -20px var(--accent) !important;
 }
@@ -667,6 +670,7 @@ button.secondary:hover:not(:disabled) {
   background: var(--bg-hover) !important;
   border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color)) !important;
   color: var(--text-primary) !important;
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px) !important;
 }
 
@@ -675,6 +679,7 @@ button.secondary:hover:not(:disabled) {
 button.danger:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 58%, var(--border-color)) !important;
   background: color-mix(in srgb, var(--danger) 13%, transparent) !important;
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px) !important;
 }
 

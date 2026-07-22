@@ -74,6 +74,7 @@ function onClick(event) {
 .app-button--primary:hover:not(:disabled) {
   filter: saturate(1.05) brightness(1.02);
   box-shadow: 0 12px 28px -18px var(--accent);
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 
@@ -86,6 +87,7 @@ function onClick(event) {
 .app-button--secondary:hover:not(:disabled) {
   background: var(--bg-hover);
   border-color: color-mix(in srgb, var(--accent) 22%, var(--border-color));
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 
@@ -99,6 +101,7 @@ function onClick(event) {
 .app-button--destructive:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--danger) 58%, var(--border-color));
   background: color-mix(in srgb, var(--danger) 13%, transparent);
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 
@@ -110,6 +113,7 @@ function onClick(event) {
 .app-button--ghost:hover:not(:disabled) {
   background: var(--bg-hover);
   color: var(--text-primary);
+  /* Fluid ledger exception: intentional action hover state. */
   transform: translateY(-1px);
 }
 

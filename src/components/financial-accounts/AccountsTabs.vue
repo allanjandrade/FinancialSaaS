@@ -119,7 +119,7 @@ function handleMoreFocusout(event) {
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--bg-panel) 86%, var(--bg-hover));
   font-family: var(--font-sans);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   scrollbar-width: thin;
 }
 

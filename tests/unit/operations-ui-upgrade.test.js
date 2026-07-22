@@ -41,7 +41,7 @@ describe('operations UI upgrade', () => {
     const accountsTabs = read('src/components/financial-accounts/AccountsTabs.vue')
     const structure = read('src/views/FinancialStructure.vue')
 
-    expect(entries).toContain('class="entries-view operation-shell"')
+    expect(entries).toContain('class="entries-view operation-shell ledger-page-shell"')
     expect(entries).toContain('data-testid="operation-hero"')
     expect(entries).toContain('data-testid="entry-ocr-primary-action"')
     expect(entries).toContain('openPrimaryOcr')
@@ -65,7 +65,7 @@ describe('operations UI upgrade', () => {
     expect(accountsTabs).toContain('secondaryTabs')
     expect(accountsTabs).toContain('tab-count')
     expect(structure).toContain("const accountFormVisible = ref(false)")
-    expect(structure).toContain("class=\"accounts-layout\"")
+    expect(structure).toContain('class="accounts-layout ledger-workspace"')
     expect(structure).toContain("'form-hidden': !accountFormVisible")
     expect(structure).not.toContain('accounts-command-strip')
   })

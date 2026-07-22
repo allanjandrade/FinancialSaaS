@@ -125,4 +125,22 @@ describe('fluid ledger global redesign', () => {
 
     expect(source).not.toContain('grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))')
   })
+
+  it('does not reintroduce broad raised-card styling on static surfaces', () => {
+    const source = [
+      read('src/styles/main.css'),
+      read('src/styles/layout.css'),
+      read('src/views/Home.vue'),
+      read('src/views/Entries.vue'),
+      read('src/views/FinancialStructure.vue'),
+      read('src/views/public/Landing.vue'),
+      read('src/views/public/Pricing.vue'),
+    ].join('\n')
+
+    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.metric-card', '.kpi-card']) {
+      const surfaceBlocks = blockFor(source, selector)
+      expect(surfaceBlocks, `${selector} should stay flat on static surfaces`).not.toContain('box-shadow: var(--shadow-card)')
+      expect(surfaceBlocks, `${selector} should stay still on static surfaces`).not.toContain('transform: translateY(-')
+    }
+  })
 })

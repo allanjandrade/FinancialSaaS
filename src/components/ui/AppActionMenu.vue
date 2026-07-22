@@ -69,6 +69,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick))
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-card);
+  /* Fluid ledger exception: modal or floating interaction surface. */
   box-shadow: var(--shadow-card-hover);
 }
 
