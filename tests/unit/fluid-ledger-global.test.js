@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 const read = (file) => fs.readFileSync(file, 'utf8')
 const exists = (file) => fs.existsSync(file)
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const blockFor = (source, selector) => {
+const blocksFor = (source, selector) => {
   const selectorPattern = escapeRegex(selector)
   const selectorBoundary = '(?=$|[\\s,.:>+~\\[\\)#\\{])'
   const rulePattern = new RegExp(`(?=(?:^|[{}])\\s*([^{}]*?${selectorPattern}${selectorBoundary}[^{}]*)\\{([^{}]*)\\})`, 'g')
@@ -16,10 +16,12 @@ const blockFor = (source, selector) => {
     rulePattern.lastIndex += 1
   }
 
-  return blocks.join('\n')
+  return blocks
 }
-const surfaceBlockFor = (source, selector) => blockFor(source, selector)
-  .split('\n')
+
+const blockFor = (source, selector) => blocksFor(source, selector).join('\n')
+
+const surfaceBlockFor = (source, selector) => blocksFor(source, selector)
   .filter((block) => {
     const header = block.split('{')[0]
     return header.split(',').some((part) => {
@@ -32,6 +34,19 @@ const surfaceBlockFor = (source, selector) => blockFor(source, selector)
   .join('\n')
 
 describe('fluid ledger global redesign', () => {
+  it('checks full multi-line CSS rules for static surface regressions', () => {
+    const source = `
+      .purchase-hero,
+      .purchase-shell,
+      .review-panel {
+        background: var(--surface-ledger);
+        box-shadow: var(--shadow-card);
+      }
+    `
+
+    expect(surfaceBlockFor(source, '.purchase-hero')).toContain('box-shadow: var(--shadow-card)')
+  })
+
   it('defines ledger surface tokens and neutralizes raised card defaults', () => {
     const tokens = read('src/styles/tokens.css')
     const main = read('src/styles/main.css')
