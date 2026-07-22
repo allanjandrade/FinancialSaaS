@@ -17,7 +17,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthBackground from '@/components/brand/AuthBackground.vue'
 import BrandMark from '@/components/brand/BrandMark.vue'
-import { validateGoogleSignupAccess } from '@/domain/auth/googleAuth.js'
+import { isNewOAuthUser, validateGoogleSignupAccess } from '@/domain/auth/googleAuth.js'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -40,7 +40,7 @@ onMounted(async () => {
       setTimeout(() => router.replace('/login'), 800)
       return
     }
-    const isNewUser = Boolean(session.user?.created_at && session.user?.last_sign_in_at && session.user.created_at === session.user.last_sign_in_at)
+    const isNewUser = isNewOAuthUser(session)
     const googleAccess = await validateGoogleSignupAccess(window.supabase, session)
     if (!googleAccess.allowed) {
       await authStore.signOut()
