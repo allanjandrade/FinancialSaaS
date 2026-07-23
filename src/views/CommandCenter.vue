@@ -36,6 +36,12 @@
       @run="runAction"
     />
 
+    <FirstStepsStrip
+      v-if="proactiveAgenda.firstSteps.some((step) => step.status !== 'done')"
+      :steps="proactiveAgenda.firstSteps"
+      @run="runAction"
+    />
+
     <FinancialAgenda
       :groups="proactiveAgenda.grouped"
       @run="runAction"
@@ -119,6 +125,7 @@ import { useRouter } from 'vue-router'
 import { ArrowRight } from 'lucide-vue-next'
 import PageShell from '@/components/layout/PageShell.vue'
 import NextBestAction from '@/components/v3/NextBestAction.vue'
+import FirstStepsStrip from '@/components/v3/FirstStepsStrip.vue'
 import FinancialAgenda from '@/components/v3/FinancialAgenda.vue'
 import FinancialOSMap from '@/components/v3/FinancialOSMap.vue'
 import { useFinanceStore } from '@/stores/finance.js'
