@@ -169,6 +169,7 @@ import {
 import { useFinanceStore } from '@/stores/finance.js'
 import { buildV3CommandCenter } from '@/domain/v3/commandCenter.js'
 import { buildProactiveFinancialAgenda } from '@/domain/v3/proactiveOrchestrator.js'
+import { buildAssistedExecution } from '@/domain/v3/actionExecution.js'
 import { buildFinancialIntelligence } from '@/utils/financial-intelligence.js'
 import { buildExecutiveSummary } from '@/utils/release7-ux.js'
 import { buildSubscriptionSummary } from '@/utils/subscriptions.js'
@@ -211,6 +212,11 @@ const proactiveAgenda = computed(() => buildProactiveFinancialAgenda({
   monthData: monthData.value,
   subscriptionSummary: subscriptionSummary.value,
   commandCenter: v3Command.value,
+  referenceDate: dashboardReferenceDate.value,
+}))
+const assistedExecution = computed(() => buildAssistedExecution(proactiveAgenda.value.nextBestAction, {
+  state: financeStore.state,
+  subscriptionSummary: subscriptionSummary.value,
   referenceDate: dashboardReferenceDate.value,
 }))
 const familyId = computed(() => financeStore.state.family?.id || '')
@@ -278,6 +284,7 @@ async function requestExplanation() {
       question: question.value,
       commandCenter: v3Command.value,
       proactiveAgenda: proactiveAgenda.value,
+      assistedExecution: assistedExecution.value,
     })
     aiResponse.value = result.response
     memoryState.value = result.memoryStatus
