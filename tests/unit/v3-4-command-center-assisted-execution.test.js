@@ -118,6 +118,9 @@ describe('V3.4 Command Center assisted execution integration', () => {
     expect(commandCenter).toContain('current_amount: Number(draft.currentAmount || 0)')
     expect(commandCenter).toContain("target_date: draft.targetDate || ''")
     expect(commandCenter).toContain('monthly_contribution: Number(draft.monthlyContribution || 0)')
+    expect(commandCenter).toContain("type: draft.type || 'reserva_emergencia'")
+    expect(commandCenter).toContain('const nextBillingDate = draft.nextBillingDate || draft.next_billing_date')
+    expect(commandCenter).toContain('if (!nextBillingDate) return null')
   })
 
   it('opens first-income assisted execution without writing until confirm', async () => {
@@ -173,6 +176,7 @@ describe('V3.4 Command Center assisted execution integration', () => {
       execution: drawer.props('execution'),
       draft: {
         name: 'Reserva',
+        type: 'reserva_emergencia',
         targetAmount: '12000',
         currentAmount: '1500',
         targetDate: '2026-12-31',
@@ -184,12 +188,54 @@ describe('V3.4 Command Center assisted execution integration', () => {
     expect(store.state.planningGoals).toHaveLength(1)
     expect(store.state.planningGoals[0]).toMatchObject({
       name: 'Reserva',
+      type: 'reserva_emergencia',
       target_amount: 12000,
       current_amount: 1500,
       target_date: '2026-12-31',
       monthly_contribution: 700,
       status: 'active',
     })
+  })
+
+  it('does not update subscription dates or success token when updateDate draft has no date', async () => {
+    const { wrapper, store } = mountCommandCenter({
+      incomes: [{ id: 'income-1', amount: 5000, date: '2026-07-05', type: 'Salario' }],
+      planningGoals: [{ id: 'goal-1', name: 'Reserva', target_amount: 12000, current_amount: 3000, status: 'active' }],
+      subscriptions: [{
+        id: 'sub-netflix',
+        name: 'Netflix',
+        provider: 'Netflix',
+        category: 'Streaming',
+        amount: 39.9,
+        billing_cycle: 'monthly',
+        billing_interval: 1,
+        next_billing_date: '2026-07-25',
+        status: 'active',
+        payment_method_type: 'account',
+        account_id: 'account-1',
+        reminder_days: 3,
+        is_essential: true,
+      }],
+    })
+
+    await wrapper.get('[data-testid="v33-next-best-action"] button.primary-button').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.getComponent({ name: 'AssistedActionDrawer' })
+    expect(drawer.props('execution')).toMatchObject({
+      type: 'subscription-charge',
+      mode: 'drawer',
+    })
+    const initialSuccessToken = drawer.props('successToken')
+
+    drawer.vm.$emit('confirm', {
+      execution: drawer.props('execution'),
+      draft: { action: 'updateDate' },
+    })
+    await flushPromises()
+
+    expect(store.state.subscriptions[0].next_billing_date).toBe('2026-07-25')
+    expect(drawer.props('successToken')).toBe(initialSuccessToken)
   })
 
   it('routes assisted drawer fallback descriptors through Command Center router push', async () => {

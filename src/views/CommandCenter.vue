@@ -280,6 +280,7 @@ function confirmAssistedAction({ execution, draft = {} } = {}) {
     } else if (execution.type === 'create-first-goal') {
       financeStore.addPlanningGoal({
         name: draft.name,
+        type: draft.type || 'reserva_emergencia',
         target_amount: Number(draft.targetAmount || 0),
         current_amount: Number(draft.currentAmount || 0),
         target_date: draft.targetDate || '',
@@ -305,8 +306,11 @@ function applySubscriptionAction(subscriptionId, draft = {}) {
   }
 
   if (draft.action === 'updateDate') {
+    const nextBillingDate = draft.nextBillingDate || draft.next_billing_date
+    if (!nextBillingDate) return null
+
     return financeStore.updateSubscription(subscriptionId, {
-      next_billing_date: draft.nextBillingDate || draft.next_billing_date,
+      next_billing_date: nextBillingDate,
     })
   }
 
