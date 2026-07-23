@@ -263,8 +263,8 @@ function confirmAssistedAction({ execution, draft = {} } = {}) {
     if (execution.type === 'first-income') {
       financeStore.addIncome({
         description: draft.description,
-        amount: draft.amount,
-        date: draft.date,
+        amount: Number(draft.amount || 0),
+        date: draft.date || dashboardReferenceDate.value,
         type: draft.type || 'Salario',
         sourceType: SOURCE_TYPES.ACCOUNT,
         sourceId: draft.sourceId || financeStore.state.financialAccounts?.[0]?.id,
@@ -280,10 +280,10 @@ function confirmAssistedAction({ execution, draft = {} } = {}) {
     } else if (execution.type === 'create-first-goal') {
       financeStore.addPlanningGoal({
         name: draft.name,
-        target_amount: draft.target_amount ?? draft.targetAmount,
-        current_amount: draft.current_amount ?? draft.currentAmount,
-        target_date: draft.target_date ?? draft.targetDate,
-        monthly_contribution: draft.monthly_contribution ?? draft.monthlyContribution,
+        target_amount: Number(draft.targetAmount || 0),
+        current_amount: Number(draft.currentAmount || 0),
+        target_date: draft.targetDate || '',
+        monthly_contribution: Number(draft.monthlyContribution || 0),
         status: 'active',
       })
       wrote = true

@@ -102,12 +102,22 @@ describe('V3.4 Command Center assisted execution integration', () => {
   it('wires the assisted action drawer contract into Command Center source', () => {
     const commandCenter = read('src/views/CommandCenter.vue')
 
+    expect(commandCenter).toContain("import { computed, ref } from 'vue'")
     expect(commandCenter).toContain("import AssistedActionDrawer from '@/components/v3/AssistedActionDrawer.vue'")
     expect(commandCenter).toContain("import { buildAssistedExecution } from '@/domain/v3/actionExecution.js'")
+    expect(commandCenter).toContain("import { SOURCE_TYPES } from '@/constants/financial-structure.js'")
     expect(commandCenter).toContain('const selectedAssistedAction = ref(null)')
     expect(commandCenter).toContain('<AssistedActionDrawer')
+    expect(commandCenter).toContain('@close="closeAssistedDrawer"')
+    expect(commandCenter).toContain('@route="openAssistedRoute"')
     expect(commandCenter).toContain('@confirm="confirmAssistedAction"')
     expect(commandCenter).toContain("execution.mode === 'drawer'")
+    expect(commandCenter).toContain('amount: Number(draft.amount || 0)')
+    expect(commandCenter).toContain('date: draft.date || dashboardReferenceDate.value')
+    expect(commandCenter).toContain('target_amount: Number(draft.targetAmount || 0)')
+    expect(commandCenter).toContain('current_amount: Number(draft.currentAmount || 0)')
+    expect(commandCenter).toContain("target_date: draft.targetDate || ''")
+    expect(commandCenter).toContain('monthly_contribution: Number(draft.monthlyContribution || 0)')
   })
 
   it('opens first-income assisted execution without writing until confirm', async () => {
@@ -128,10 +138,8 @@ describe('V3.4 Command Center assisted execution integration', () => {
       execution: drawer.props('execution'),
       draft: {
         description: 'Salario ACME',
-        amount: 5000,
-        date: '2026-07-05',
+        amount: '5000',
         type: 'Salario',
-        sourceId: 'account-1',
       },
     })
     await flushPromises()
@@ -140,9 +148,47 @@ describe('V3.4 Command Center assisted execution integration', () => {
     expect(store.state.incomes[0]).toMatchObject({
       description: 'Salario ACME',
       amount: 5000,
-      date: '2026-07-05',
+      date: '2026-07-23',
       sourceType: SOURCE_TYPES.ACCOUNT,
       sourceId: 'account-1',
+    })
+  })
+
+  it('creates the first planning goal from drawer camelCase draft fields', async () => {
+    const { wrapper, store } = mountCommandCenter({
+      incomes: [{ id: 'income-1', amount: 5000, date: '2026-07-05', type: 'Salario' }],
+      expenses: [{ id: 'expense-1', amount: 300, date: '2026-07-10', category: 'Mercado' }],
+    })
+
+    await wrapper.get('[data-testid="v33-next-best-action"] button.primary-button').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.getComponent({ name: 'AssistedActionDrawer' })
+    expect(drawer.props('execution')).toMatchObject({
+      type: 'create-first-goal',
+      mode: 'drawer',
+    })
+
+    drawer.vm.$emit('confirm', {
+      execution: drawer.props('execution'),
+      draft: {
+        name: 'Reserva',
+        targetAmount: '12000',
+        currentAmount: '1500',
+        targetDate: '2026-12-31',
+        monthlyContribution: '700',
+      },
+    })
+    await flushPromises()
+
+    expect(store.state.planningGoals).toHaveLength(1)
+    expect(store.state.planningGoals[0]).toMatchObject({
+      name: 'Reserva',
+      target_amount: 12000,
+      current_amount: 1500,
+      target_date: '2026-12-31',
+      monthly_contribution: 700,
+      status: 'active',
     })
   })
 
