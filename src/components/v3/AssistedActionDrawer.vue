@@ -180,7 +180,7 @@ watch(
 function resetExecutionState() {
   activeStep.value = 'execute'
   confirmation.value = null
-  draft.value = { ...(props.execution?.draftDefaults || {}) }
+  draft.value = initialDraftForExecution(props.execution)
 }
 
 function requestClose() {
@@ -192,7 +192,7 @@ function handleEsc() {
 }
 
 function routeExecution() {
-  emit('route', props.execution?.fallbackRoute || props.execution?.route || '')
+  emit('route', props.execution)
 }
 
 function prepareConfirmation() {
@@ -207,6 +207,22 @@ function confirmExecution() {
     draft: { ...draft.value },
     confirmation: currentConfirmation,
   })
+}
+
+function initialDraftForExecution(execution = {}) {
+  const initialDraft = { ...(execution?.draftDefaults || {}) }
+
+  if (execution?.type === 'cut-dispensable-subscriptions') {
+    if (!Array.isArray(initialDraft.subscriptionIds)) {
+      initialDraft.subscriptionIds = (Array.isArray(execution.options) ? execution.options : [])
+        .map((option) => option?.id)
+        .filter((id) => id !== null && id !== undefined && id !== '')
+        .map(String)
+    }
+    delete initialDraft.selectedSubscriptionIds
+  }
+
+  return initialDraft
 }
 </script>
 

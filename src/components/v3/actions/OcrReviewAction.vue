@@ -9,7 +9,7 @@
       </p>
     </div>
 
-    <AppButton variant="primary" @click="emit('route', execution?.fallbackRoute || execution?.route || '/entries')">
+    <AppButton variant="primary" @click="emit('route', execution)">
       Abrir lançamentos
     </AppButton>
   </section>

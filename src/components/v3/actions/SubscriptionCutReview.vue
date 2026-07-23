@@ -25,6 +25,7 @@
           type="checkbox"
           :value="option.id"
           :checked="selectedIds.includes(String(option.id))"
+          :disabled="isOnlySelectedOption(option.id)"
           @change="toggleOption(option.id, $event.target.checked)"
         />
         <span>
@@ -32,6 +33,8 @@
           <small>{{ formatMoney(option.monthlyAmount) }}/mês</small>
         </span>
       </label>
+      <p v-if="options.length && !selectedIds.length">Selecione uma assinatura para estimar o impacto.</p>
+      <p v-else-if="options.length">Mantenha ao menos uma assinatura marcada para revisar.</p>
       <p v-if="!options.length">Nenhuma assinatura dispensável disponível para seleção.</p>
     </fieldset>
   </section>
@@ -56,18 +59,14 @@ const actionOptions = [
 const draft = computed(() => props.modelValue || {})
 const options = computed(() => (Array.isArray(props.execution?.options) ? props.execution.options : []))
 const selectedIds = computed(() => {
-  const ids = draft.value.selectedSubscriptionIds || []
+  const ids = draft.value.subscriptionIds || []
   return Array.isArray(ids) ? ids.map(String) : []
 })
-const selectedOptions = computed(() => {
-  if (!selectedIds.value.length) return options.value
-  return options.value.filter((option) => selectedIds.value.includes(String(option.id)))
-})
+const selectedOptions = computed(() => options.value.filter((option) => selectedIds.value.includes(String(option.id))))
 const monthlyImpact = computed(() => {
-  const selectedTotal = selectedOptions.value.reduce((sum, option) => sum + money(option.monthlyAmount), 0)
-  return selectedTotal || money(props.execution?.impactAmount)
+  return selectedOptions.value.reduce((sum, option) => sum + money(option.monthlyAmount), 0)
 })
-const annualImpact = computed(() => monthlyImpact.value * 12 || money(props.execution?.annualImpactAmount))
+const annualImpact = computed(() => monthlyImpact.value * 12)
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function money(value) {
@@ -83,13 +82,19 @@ function patch(values) {
   emit('update:modelValue', { ...draft.value, ...values })
 }
 
+function isOnlySelectedOption(id) {
+  return selectedIds.value.length === 1 && selectedIds.value.includes(String(id))
+}
+
 function toggleOption(id, checked) {
   const normalizedId = String(id)
+  if (!checked && isOnlySelectedOption(normalizedId)) return
+
   const nextIds = checked
     ? [...new Set([...selectedIds.value, normalizedId])]
     : selectedIds.value.filter((selectedId) => selectedId !== normalizedId)
 
-  patch({ selectedSubscriptionIds: nextIds })
+  patch({ subscriptionIds: nextIds })
 }
 </script>
 

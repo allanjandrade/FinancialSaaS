@@ -44,6 +44,25 @@ describe('V3.4 assisted action drawer contract', () => {
     expect(drawer).toContain('Salvando...')
   })
 
+  it('emits route payloads as execution descriptors', () => {
+    const drawer = read('src/components/v3/AssistedActionDrawer.vue')
+    const ocrReview = read('src/components/v3/actions/OcrReviewAction.vue')
+
+    expect(drawer).toContain("emit('route', props.execution)")
+    expect(drawer).not.toContain("emit('route', props.execution?.fallbackRoute")
+    expect(ocrReview).toContain("emit('route', execution)")
+    expect(ocrReview).not.toContain("emit('route', execution?.fallbackRoute")
+  })
+
+  it('uses explicit subscriptionIds for subscription cut drafts', () => {
+    const cutReview = read('src/components/v3/actions/SubscriptionCutReview.vue')
+
+    expect(cutReview).toContain('draft.value.subscriptionIds')
+    expect(cutReview).toContain('patch({ subscriptionIds: nextIds })')
+    expect(cutReview).not.toContain('selectedSubscriptionIds')
+    expect(cutReview).not.toContain('if (!selectedIds.value.length) return options.value')
+  })
+
   it.each([
     ['src/components/v3/actions/IncomeActionForm.vue', 'v34-income-action-form'],
     ['src/components/v3/actions/OcrReviewAction.vue', 'v34-ocr-review-action'],
