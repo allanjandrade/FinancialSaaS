@@ -30,6 +30,17 @@
       </aside>
     </section>
 
+    <NextBestAction
+      :action="proactiveAgenda.nextBestAction"
+      :blockers="proactiveAgenda.blockers"
+      @run="runAction"
+    />
+
+    <FinancialAgenda
+      :groups="proactiveAgenda.grouped"
+      @run="runAction"
+    />
+
     <section class="pillar-grid" aria-label="Pilares do score financeiro">
       <article v-for="pillar in command.score.pillars" :key="pillar.key" class="pillar-card" :class="pillar.tone">
         <div>
@@ -107,12 +118,15 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight } from 'lucide-vue-next'
 import PageShell from '@/components/layout/PageShell.vue'
+import NextBestAction from '@/components/v3/NextBestAction.vue'
+import FinancialAgenda from '@/components/v3/FinancialAgenda.vue'
 import FinancialOSMap from '@/components/v3/FinancialOSMap.vue'
 import { useFinanceStore } from '@/stores/finance.js'
 import { buildExecutiveSummary } from '@/utils/release7-ux.js'
 import { buildSubscriptionSummary } from '@/utils/subscriptions.js'
 import { buildV3CommandCenter, v3CommandFactsForAI } from '@/domain/v3/commandCenter.js'
 import { buildV3OperatingSystem } from '@/domain/v3/financialOperatingSystem.js'
+import { buildProactiveFinancialAgenda } from '@/domain/v3/proactiveOrchestrator.js'
 
 const router = useRouter()
 const financeStore = useFinanceStore()
@@ -134,6 +148,13 @@ const command = computed(() => buildV3CommandCenter({
   subscriptionSummary: subscriptionSummary.value,
   monthData: monthData.value,
   availableBalance: availableBalance.value,
+}))
+const proactiveAgenda = computed(() => buildProactiveFinancialAgenda({
+  state: financeStore.state,
+  monthData: monthData.value,
+  subscriptionSummary: subscriptionSummary.value,
+  commandCenter: command.value,
+  referenceDate: dashboardReferenceDate.value,
 }))
 const aiFacts = computed(() => v3CommandFactsForAI(command.value))
 const operatingSystem = computed(() => buildV3OperatingSystem({
