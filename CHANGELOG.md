@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.0 - 2026-07-23
+
+- Adicionada execucao assistida para prioridades da Central de Comando.
+- Agenda proativa passa a carregar metadata de execucao segura.
+- Drawer contextual guia receita inicial, metas e acoes de assinaturas com confirmacao.
+- IA consultiva recebe contexto da execucao sem poder gravar dados.
+- Metadata e validador de release atualizados para 3.4.0.
+
 ## 3.3.0 - 2026-07-23
 
 - Adicionada orquestracao financeira proativa para agenda, melhor proxima acao e bloqueios.

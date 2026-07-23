@@ -6,7 +6,7 @@ const exists = (file) => fs.existsSync(file)
 
 const pkg = JSON.parse(read('package.json'))
 const lock = JSON.parse(read('package-lock.json'))
-const currentVersion = '3.3.0'
+const currentVersion = '3.4.0'
 
 assert.equal(pkg.version, currentVersion, `package.json must declare ${currentVersion}.`)
 assert.equal(lock.version, currentVersion, `package-lock root must declare ${currentVersion}.`)
@@ -82,6 +82,30 @@ for (const token of [
 ]) {
   assert.ok(proactiveCommandCenter.includes(token), `Command center is missing ${token}.`)
 }
+assert.ok(exists('src/domain/v3/actionExecution.js'), 'V3.4 assisted execution domain module is missing.')
+const assistedExecution = read('src/domain/v3/actionExecution.js')
+for (const token of ['buildAssistedExecution', 'buildExecutionConfirmation', 'executionFactsForAI']) {
+  assert.ok(assistedExecution.includes(token), `V3.4 assisted execution is missing ${token}.`)
+}
+assert.ok(exists('src/components/v3/AssistedActionDrawer.vue'), 'V3.4 assisted drawer is missing.')
+assert.ok(read('src/components/v3/AssistedActionDrawer.vue').includes('data-testid="v34-assisted-drawer"'), 'V3.4 assisted drawer test id is missing.')
+for (const token of [
+  "import AssistedActionDrawer from '@/components/v3/AssistedActionDrawer.vue'",
+  "import { buildAssistedExecution } from '@/domain/v3/actionExecution.js'",
+  '<AssistedActionDrawer',
+  '@confirm="confirmAssistedAction"',
+]) {
+  assert.ok(commandCenterView.includes(token), `Command center is missing V3.4 token ${token}.`)
+}
+assert.ok(
+  read('src/api/financial-analyst.js').includes('v34Execution: assistedExecution ? executionFactsForAI(assistedExecution) : null'),
+  'Financial analyst must send V3.4 execution facts.'
+)
+assert.ok(exists('docs/releases/RELEASE3_4_0.md'), 'Release 3.4.0 document is missing.')
+assert.ok(
+  read('docs/releases/RELEASE3_4_0.md').includes('# Release 3.4.0 - Execucao Assistida'),
+  'Release 3.4.0 document has the wrong heading.'
+)
 const router = read('src/router/index.js')
 const fallback = read('scripts/generate-spa-route-fallbacks.js')
 assert.ok(router.includes("path: '/dashboard'"), 'Router must expose /dashboard.')
