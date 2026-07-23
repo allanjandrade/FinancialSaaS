@@ -6,7 +6,7 @@ const exists = (file) => fs.existsSync(file)
 
 const pkg = JSON.parse(read('package.json'))
 const lock = JSON.parse(read('package-lock.json'))
-const currentVersion = '3.2.0'
+const currentVersion = '3.3.0'
 
 assert.equal(pkg.version, currentVersion, `package.json must declare ${currentVersion}.`)
 assert.equal(lock.version, currentVersion, `package-lock root must declare ${currentVersion}.`)
@@ -22,7 +22,7 @@ const versionConfig = read('src/config/app-version.js')
 for (const token of [
   `APP_VERSION = '${currentVersion}'`,
   "APP_RELEASE_CHANNEL = 'stable'",
-  "APP_RELEASE_DATE = '2026-07-14'",
+  "APP_RELEASE_DATE = '2026-07-23'",
 ]) {
   assert.ok(versionConfig.includes(token), `Runtime version config is missing ${token}.`)
 }
@@ -56,6 +56,32 @@ for (const token of [
 ]) {
   assert.ok(commandCenterView.includes(token), `Command center view is missing ${token}.`)
 }
+assert.ok(exists('src/domain/v3/proactiveOrchestrator.js'), 'V3.3 proactive orchestrator module is missing.')
+const proactiveOrchestrator = read('src/domain/v3/proactiveOrchestrator.js')
+for (const token of [
+  'buildProactiveFinancialAgenda',
+  'buildFirstStepsChecklist',
+  'v33AgendaFactsForAI',
+]) {
+  assert.ok(proactiveOrchestrator.includes(token), `V3.3 proactive orchestrator is missing ${token}.`)
+}
+
+for (const file of [
+  'src/components/v3/NextBestAction.vue',
+  'src/components/v3/FinancialAgenda.vue',
+  'src/components/v3/FirstStepsStrip.vue',
+]) {
+  assert.ok(exists(file), `${file} is missing.`)
+}
+const proactiveCommandCenter = read('src/views/CommandCenter.vue')
+for (const token of [
+  "import { buildProactiveFinancialAgenda } from '@/domain/v3/proactiveOrchestrator.js'",
+  '<NextBestAction',
+  '<FinancialAgenda',
+  '<FirstStepsStrip',
+]) {
+  assert.ok(proactiveCommandCenter.includes(token), `Command center is missing ${token}.`)
+}
 const router = read('src/router/index.js')
 const fallback = read('scripts/generate-spa-route-fallbacks.js')
 assert.ok(router.includes("path: '/dashboard'"), 'Router must expose /dashboard.')
@@ -72,6 +98,11 @@ assert.ok(navigation.includes("{ path: '/analysis', label: 'Análises', icon: 'd
 const analyst = read('src/api/financial-analyst.js')
 assert.ok(analyst.includes("import { v3CommandFactsForAI } from '@/domain/v3/commandCenter.js'"), 'Financial analyst must import V3 command facts.')
 assert.ok(analyst.includes('v3Command: commandCenter ? v3CommandFactsForAI(commandCenter) : null'), 'Financial analyst must send V3 command facts.')
+const proactiveAnalyst = read('src/api/financial-analyst.js')
+assert.ok(
+  proactiveAnalyst.includes('v33Agenda: proactiveAgenda ? v33AgendaFactsForAI(proactiveAgenda) : null'),
+  'Financial analyst must send V3.3 agenda facts.'
+)
 const intelligenceCenter = read('src/views/IntelligenceCenter.vue')
 assert.ok(intelligenceCenter.includes("import { buildV3CommandCenter } from '@/domain/v3/commandCenter.js'"), 'Intelligence center must build the V3 command center.')
 assert.ok(intelligenceCenter.includes('commandCenter: v3Command.value'), 'Intelligence center must pass V3 command facts to AI.')
@@ -123,6 +154,11 @@ assert.ok(exists('docs/releases/RELEASE3_2_0.md'), 'Release 3.2.0 document is mi
 assert.ok(
   read('docs/releases/RELEASE3_2_0.md').includes('# Release 3.2.0 - UX Operacional Integrado'),
   'Release 3.2.0 document has the wrong heading.'
+)
+assert.ok(exists('docs/releases/RELEASE3_3_0.md'), 'Release 3.3.0 document is missing.')
+assert.ok(
+  read('docs/releases/RELEASE3_3_0.md').includes('# Release 3.3.0 - Orquestracao Financeira Proativa'),
+  'Release 3.3.0 document has the wrong heading.'
 )
 
 const readme = read('README.md')

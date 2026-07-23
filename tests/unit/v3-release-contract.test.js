@@ -6,20 +6,20 @@ const root = process.cwd()
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
 const exists = (file) => fs.existsSync(path.join(root, file))
 
-describe('Version 3.2.0 release contract', () => {
-  it('declares version 3.2.0 in package metadata and runtime app config', () => {
+describe('Version 3.3.0 release contract', () => {
+  it('declares version 3.3.0 in package metadata and runtime app config', () => {
     const pkg = JSON.parse(read('package.json'))
     const lock = JSON.parse(read('package-lock.json'))
 
-    expect(pkg.version).toBe('3.2.0')
-    expect(lock.version).toBe('3.2.0')
-    expect(lock.packages[''].version).toBe('3.2.0')
+    expect(pkg.version).toBe('3.3.0')
+    expect(lock.version).toBe('3.3.0')
+    expect(lock.packages[''].version).toBe('3.3.0')
 
     expect(exists('src/config/app-version.js')).toBe(true)
     const appVersion = read('src/config/app-version.js')
-    expect(appVersion).toContain("APP_VERSION = '3.2.0'")
+    expect(appVersion).toContain("APP_VERSION = '3.3.0'")
     expect(appVersion).toContain("APP_RELEASE_CHANNEL = 'stable'")
-    expect(appVersion).toContain("APP_RELEASE_DATE = '2026-07-14'")
+    expect(appVersion).toContain("APP_RELEASE_DATE = '2026-07-23'")
   })
 
   it('shows the consolidated version in settings about without hardcoded 2.0.0 copy', () => {
@@ -36,7 +36,7 @@ describe('Version 3.2.0 release contract', () => {
 
     expect(pkg.scripts['validate:v3-release']).toBe('node scripts/validate-v3-release.js')
     expect(exists('scripts/validate-v3-release.js')).toBe(true)
-    expect(read('scripts/validate-v3-release.js')).toContain("const currentVersion = '3.2.0'")
+    expect(read('scripts/validate-v3-release.js')).toContain("const currentVersion = '3.3.0'")
     expect(read('scripts/validate-v3-release.js')).toContain('Version ${currentVersion} validation: PASS')
 
     expect(exists('CHANGELOG.md')).toBe(true)
@@ -47,6 +47,9 @@ describe('Version 3.2.0 release contract', () => {
     expect(exists('docs/releases/RELEASE3_2_0.md')).toBe(true)
     expect(read('docs/releases/RELEASE3_2_0.md')).toContain('# Release 3.2.0 - UX Operacional Integrado')
 
+    expect(exists('docs/releases/RELEASE3_3_0.md')).toBe(true)
+    expect(read('docs/releases/RELEASE3_3_0.md')).toContain('# Release 3.3.0 - Orquestracao Financeira Proativa')
+
     expect(exists('docs/releases/RELEASE3_1_0.md')).toBe(true)
     expect(read('docs/releases/RELEASE3_1_0.md')).toContain('# Release 3.1.0 - Motor de Entrada e Conciliação')
 
@@ -54,7 +57,7 @@ describe('Version 3.2.0 release contract', () => {
     expect(read('docs/releases/RELEASE3_0_0.md')).toContain('# Release 3.0.0 - Product Readiness')
 
     const readme = read('README.md')
-    expect(readme).toContain('Versão atual: 3.2.0')
+    expect(readme).toContain('Versão atual: 3.3.0')
     expect(readme).toContain('npm run validate:v3-release')
   })
 })

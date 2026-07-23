@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.0 - 2026-07-23
+
+- Adicionada orquestracao financeira proativa para agenda, melhor proxima acao e bloqueios.
+- Central de Comando passa a exibir agenda por horizonte e primeiros passos operacionais.
+- IA consultiva recebe fatos da agenda V3.3 para explicar recomendacoes com dados reais.
+- Metadata e validador de release atualizados para 3.3.0.
+
 ## 3.2.0 - 2026-07-14
 
 ### Added
