@@ -30,6 +30,7 @@
       label="Novo vencimento"
       type="date"
       :model-value="draft.nextBillingDate"
+      required
       @update:model-value="patch({ nextBillingDate: $event })"
     />
   </section>

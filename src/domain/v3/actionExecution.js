@@ -1,6 +1,8 @@
 import { subscriptionMonthlyEquivalent } from '@/utils/subscriptions.js'
+import { OFFICIAL_INCOME_TYPES } from '@/constants/finance.js'
 
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const DEFAULT_FIRST_INCOME_TYPE = OFFICIAL_INCOME_TYPES.includes('Salário') ? 'Salário' : 'Outros'
 
 function money(value) {
   const parsed = Number(value)
@@ -93,6 +95,7 @@ function buildFirstIncomeExecution(item = {}, context = {}) {
       description: 'Receita mensal',
       amount: 0,
       date: referenceDate,
+      type: DEFAULT_FIRST_INCOME_TYPE,
       sourceId: text(account?.id),
     },
   })

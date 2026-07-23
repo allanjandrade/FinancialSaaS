@@ -106,13 +106,16 @@ describe('V3.4 Command Center assisted execution integration', () => {
     expect(commandCenter).toContain("import AssistedActionDrawer from '@/components/v3/AssistedActionDrawer.vue'")
     expect(commandCenter).toContain("import { buildAssistedExecution } from '@/domain/v3/actionExecution.js'")
     expect(commandCenter).toContain("import { SOURCE_TYPES } from '@/constants/financial-structure.js'")
+    expect(commandCenter).toContain("import { OFFICIAL_INCOME_TYPES } from '@/constants/finance.js'")
     expect(commandCenter).toContain('const selectedAssistedAction = ref(null)')
+    expect(commandCenter).toContain("const DEFAULT_ASSISTED_INCOME_TYPE = 'Salário'")
     expect(commandCenter).toContain('<AssistedActionDrawer')
     expect(commandCenter).toContain('@close="closeAssistedDrawer"')
     expect(commandCenter).toContain('@route="openAssistedRoute"')
     expect(commandCenter).toContain('@confirm="confirmAssistedAction"')
     expect(commandCenter).toContain("execution.mode === 'drawer'")
-    expect(commandCenter).toContain('amount: Number(draft.amount || 0)')
+    expect(commandCenter).toContain('!Number.isFinite(amount)')
+    expect(commandCenter).toContain('amount <= 0')
     expect(commandCenter).toContain('date: draft.date || dashboardReferenceDate.value')
     expect(commandCenter).toContain('target_amount: Number(draft.targetAmount || 0)')
     expect(commandCenter).toContain('current_amount: Number(draft.currentAmount || 0)')
@@ -120,10 +123,10 @@ describe('V3.4 Command Center assisted execution integration', () => {
     expect(commandCenter).toContain('monthly_contribution: Number(draft.monthlyContribution || 0)')
     expect(commandCenter).toContain("type: draft.type || 'reserva_emergencia'")
     expect(commandCenter).toContain('const nextBillingDate = draft.nextBillingDate || draft.next_billing_date')
-    expect(commandCenter).toContain('if (!nextBillingDate) return null')
+    expect(commandCenter).toContain('if (!nextBillingDate)')
   })
 
-  it('opens first-income assisted execution without writing until confirm', async () => {
+  it('opens first-income assisted execution without writing until confirm and stores official fallback type', async () => {
     const { wrapper, store } = mountCommandCenter()
 
     await wrapper.get('[data-testid="v33-next-best-action"] button.primary-button').trigger('click')
@@ -140,21 +143,44 @@ describe('V3.4 Command Center assisted execution integration', () => {
     drawer.vm.$emit('confirm', {
       execution: drawer.props('execution'),
       draft: {
-        description: 'Salario ACME',
+        description: 'Salário ACME',
         amount: '5000',
-        type: 'Salario',
       },
     })
     await flushPromises()
 
     expect(store.state.incomes).toHaveLength(1)
     expect(store.state.incomes[0]).toMatchObject({
-      description: 'Salario ACME',
+      description: 'Salário ACME',
       amount: 5000,
+      type: 'Salário',
       date: '2026-07-23',
       sourceType: SOURCE_TYPES.ACCOUNT,
       sourceId: 'account-1',
     })
+  })
+
+  it.each([
+    ['zero amount', { description: 'Salário ACME', amount: 0 }],
+    ['missing amount', { description: 'Salário ACME' }],
+  ])('does not add first income or success token for %s', async (_case, draft) => {
+    const { wrapper, store } = mountCommandCenter()
+
+    await wrapper.get('[data-testid="v33-next-best-action"] button.primary-button').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.getComponent({ name: 'AssistedActionDrawer' })
+    const initialSuccessToken = drawer.props('successToken')
+
+    drawer.vm.$emit('confirm', {
+      execution: drawer.props('execution'),
+      draft,
+    })
+    await flushPromises()
+
+    expect(store.state.incomes).toHaveLength(0)
+    expect(drawer.props('successToken')).toBe(initialSuccessToken)
+    expect(drawer.props('error')).toBeTruthy()
   })
 
   it('creates the first planning goal from drawer camelCase draft fields', async () => {
@@ -236,6 +262,7 @@ describe('V3.4 Command Center assisted execution integration', () => {
 
     expect(store.state.subscriptions[0].next_billing_date).toBe('2026-07-25')
     expect(drawer.props('successToken')).toBe(initialSuccessToken)
+    expect(drawer.props('error')).toBeTruthy()
   })
 
   it('routes assisted drawer fallback descriptors through Command Center router push', async () => {

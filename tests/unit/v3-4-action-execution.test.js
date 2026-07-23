@@ -103,6 +103,7 @@ describe('V3.4 assisted execution domain', () => {
       description: 'Receita mensal',
       amount: 0,
       date: referenceDate,
+      type: 'Salário',
       sourceId: 'acc-1',
     })
 

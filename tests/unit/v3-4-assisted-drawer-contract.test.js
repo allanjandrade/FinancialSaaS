@@ -63,6 +63,25 @@ describe('V3.4 assisted action drawer contract', () => {
     expect(cutReview).not.toContain('if (!selectedIds.value.length) return options.value')
   })
 
+  it('uses official income type values in the first-income drawer form', () => {
+    const incomeForm = read('src/components/v3/actions/IncomeActionForm.vue')
+
+    expect(incomeForm).toContain('Salário')
+    expect(incomeForm).toContain('Freelancer')
+    expect(incomeForm).toContain('Outros')
+    expect(incomeForm).not.toContain("value: 'fixed'")
+    expect(incomeForm).not.toContain("value: 'variable'")
+    expect(incomeForm).not.toContain("value: 'extra'")
+    expect(incomeForm).not.toContain("draft.type || 'fixed'")
+  })
+
+  it('requires the subscription updateDate input when visible', () => {
+    const subscriptionPanel = read('src/components/v3/actions/SubscriptionActionPanel.vue')
+
+    expect(subscriptionPanel).toContain('draft.action === \'updateDate\'')
+    expect(subscriptionPanel).toContain('required')
+  })
+
   it.each([
     ['src/components/v3/actions/IncomeActionForm.vue', 'v34-income-action-form'],
     ['src/components/v3/actions/OcrReviewAction.vue', 'v34-ocr-review-action'],

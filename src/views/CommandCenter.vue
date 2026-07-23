@@ -142,6 +142,7 @@ import FinancialOSMap from '@/components/v3/FinancialOSMap.vue'
 import AssistedActionDrawer from '@/components/v3/AssistedActionDrawer.vue'
 import { useFinanceStore } from '@/stores/finance.js'
 import { SOURCE_TYPES } from '@/constants/financial-structure.js'
+import { OFFICIAL_INCOME_TYPES } from '@/constants/finance.js'
 import { buildExecutiveSummary } from '@/utils/release7-ux.js'
 import { buildSubscriptionSummary } from '@/utils/subscriptions.js'
 import { buildV3CommandCenter, v3CommandFactsForAI } from '@/domain/v3/commandCenter.js'
@@ -155,6 +156,7 @@ const selectedAssistedAction = ref(null)
 const assistedSubmitting = ref(false)
 const assistedError = ref('')
 const assistedSuccessToken = ref(0)
+const DEFAULT_ASSISTED_INCOME_TYPE = 'Salário'
 
 const selectedMonth = computed(() => normalizeMonth(financeStore.state.settings.selectedMonth))
 const selectedYear = computed(() => normalizeYear(financeStore.state.settings.year))
@@ -221,6 +223,10 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0))
 }
 
+function assistedIncomeType(value) {
+  return OFFICIAL_INCOME_TYPES.includes(value) ? value : DEFAULT_ASSISTED_INCOME_TYPE
+}
+
 function runAction(action) {
   if (!action) return
   const execution = buildAssistedExecution(action, {
@@ -261,11 +267,17 @@ function confirmAssistedAction({ execution, draft = {} } = {}) {
     let wrote = false
 
     if (execution.type === 'first-income') {
+      const amount = Number(draft.amount || 0)
+      if (!Number.isFinite(amount) || amount <= 0) {
+        assistedError.value = 'Informe uma receita maior que zero para concluir a ação assistida.'
+        return
+      }
+
       financeStore.addIncome({
         description: draft.description,
-        amount: Number(draft.amount || 0),
+        amount,
         date: draft.date || dashboardReferenceDate.value,
-        type: draft.type || 'Salario',
+        type: assistedIncomeType(draft.type),
         sourceType: SOURCE_TYPES.ACCOUNT,
         sourceId: draft.sourceId || financeStore.state.financialAccounts?.[0]?.id,
       })
@@ -307,7 +319,10 @@ function applySubscriptionAction(subscriptionId, draft = {}) {
 
   if (draft.action === 'updateDate') {
     const nextBillingDate = draft.nextBillingDate || draft.next_billing_date
-    if (!nextBillingDate) return null
+    if (!nextBillingDate) {
+      assistedError.value = 'Informe a nova data de cobrança para atualizar a assinatura.'
+      return null
+    }
 
     return financeStore.updateSubscription(subscriptionId, {
       next_billing_date: nextBillingDate,

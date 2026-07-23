@@ -21,7 +21,7 @@
     />
     <AppSelect
       label="Tipo"
-      :model-value="draft.type || 'fixed'"
+      :model-value="draft.type || DEFAULT_INCOME_TYPE"
       :options="typeOptions"
       @update:model-value="patch({ type: $event })"
     />
@@ -33,6 +33,7 @@ import { computed } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppMoneyInput from '@/components/ui/AppMoneyInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
+import { OFFICIAL_INCOME_TYPES } from '@/constants/finance.js'
 
 const props = defineProps({
   modelValue: { type: Object, default: () => ({}) },
@@ -40,11 +41,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const typeOptions = [
-  { value: 'fixed', label: 'Receita fixa' },
-  { value: 'variable', label: 'Receita variável' },
-  { value: 'extra', label: 'Receita extra' },
-]
+const ASSISTED_INCOME_TYPES = ['Salário', 'Freelancer', 'Outros']
+  .filter((type) => OFFICIAL_INCOME_TYPES.includes(type))
+const DEFAULT_INCOME_TYPE = ASSISTED_INCOME_TYPES[0] || 'Outros'
+const typeOptions = ASSISTED_INCOME_TYPES.map((type) => ({ value: type, label: type }))
 
 const draft = computed(() => props.modelValue || {})
 
