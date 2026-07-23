@@ -48,6 +48,7 @@
             <span>Confirmação</span>
             <h3>{{ confirmation?.title }}</h3>
             <p>{{ confirmation?.message }}</p>
+            <p v-if="error" class="assisted-drawer__error" role="alert">{{ error }}</p>
           </section>
 
           <section v-else-if="activeStep === 'success'" class="assisted-drawer__success" role="status">
@@ -83,9 +84,11 @@
           <AppButton
             v-else-if="activeStep === 'confirmation'"
             :variant="confirmation?.destructive ? 'destructive' : 'primary'"
+            :loading="submitting"
+            :disabled="submitting"
             @click="confirmExecution"
           >
-            {{ confirmation?.confirmLabel || 'Confirmar' }}
+            {{ submitting ? 'Salvando...' : confirmation?.confirmLabel || 'Confirmar' }}
           </AppButton>
         </footer>
       </section>
@@ -107,6 +110,8 @@ const props = defineProps({
   show: { type: Boolean, default: false },
   execution: { type: Object, default: null },
   successToken: { type: [String, Number, Boolean, Object], default: null },
+  submitting: { type: Boolean, default: false },
+  error: { type: String, default: '' },
 })
 
 const emit = defineEmits(['close', 'confirm', 'route'])
@@ -342,6 +347,16 @@ function confirmExecution() {
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.55;
+}
+
+.assisted-drawer__confirmation .assisted-drawer__error {
+  border: 1px solid color-mix(in srgb, var(--danger) 34%, var(--border-color));
+  border-radius: var(--radius-sm);
+  background: var(--expense-dim);
+  color: var(--danger);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 750;
 }
 
 @media (max-width: 640px) {

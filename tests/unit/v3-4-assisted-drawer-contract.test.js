@@ -31,6 +31,19 @@ describe('V3.4 assisted action drawer contract', () => {
     expect(drawer).toContain("import GoalActionForm from '@/components/v3/actions/GoalActionForm.vue'")
   })
 
+  it('supports confirmation loading and error states', () => {
+    const drawer = read('src/components/v3/AssistedActionDrawer.vue')
+
+    expect(drawer).toContain('submitting: { type: Boolean, default: false }')
+    expect(drawer).toContain("error: { type: String, default: '' }")
+    expect(drawer).toContain('v-if="error"')
+    expect(drawer).toContain('role="alert"')
+    expect(drawer).toContain('{{ error }}')
+    expect(drawer).toContain(':loading="submitting"')
+    expect(drawer).toContain(':disabled="submitting"')
+    expect(drawer).toContain('Salvando...')
+  })
+
   it.each([
     ['src/components/v3/actions/IncomeActionForm.vue', 'v34-income-action-form'],
     ['src/components/v3/actions/OcrReviewAction.vue', 'v34-ocr-review-action'],
