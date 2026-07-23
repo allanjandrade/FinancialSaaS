@@ -4,6 +4,7 @@ import {
   financialSnapshotContent,
 } from '@/utils/financial-intelligence.js'
 import { v3CommandFactsForAI } from '@/domain/v3/commandCenter.js'
+import { v33AgendaFactsForAI } from '@/domain/v3/proactiveOrchestrator.js'
 
 async function authenticatedHeaders() {
   const supabase = window.supabase
@@ -35,7 +36,7 @@ export async function rememberFinancialSnapshot(familyId, analysis) {
   })
 }
 
-export async function explainFinancialAnalysis({ familyId, analysis, question, commandCenter = null }) {
+export async function explainFinancialAnalysis({ familyId, analysis, question, commandCenter = null, proactiveAgenda = null }) {
   let memory = []
   let memoryStatus = 'unavailable'
 
@@ -66,6 +67,7 @@ export async function explainFinancialAnalysis({ familyId, analysis, question, c
       facts: {
         ...financialFactsForAI(analysis),
         v3Command: commandCenter ? v3CommandFactsForAI(commandCenter) : null,
+        v33Agenda: proactiveAgenda ? v33AgendaFactsForAI(proactiveAgenda) : null,
       },
       memory,
     }),

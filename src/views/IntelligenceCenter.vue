@@ -168,6 +168,7 @@ import {
 } from 'lucide-vue-next'
 import { useFinanceStore } from '@/stores/finance.js'
 import { buildV3CommandCenter } from '@/domain/v3/commandCenter.js'
+import { buildProactiveFinancialAgenda } from '@/domain/v3/proactiveOrchestrator.js'
 import { buildFinancialIntelligence } from '@/utils/financial-intelligence.js'
 import { buildExecutiveSummary } from '@/utils/release7-ux.js'
 import { buildSubscriptionSummary } from '@/utils/subscriptions.js'
@@ -204,6 +205,13 @@ const v3Command = computed(() => buildV3CommandCenter({
   subscriptionSummary: subscriptionSummary.value,
   monthData: monthData.value,
   availableBalance: availableBalance.value,
+}))
+const proactiveAgenda = computed(() => buildProactiveFinancialAgenda({
+  state: financeStore.state,
+  monthData: monthData.value,
+  subscriptionSummary: subscriptionSummary.value,
+  commandCenter: v3Command.value,
+  referenceDate: dashboardReferenceDate.value,
 }))
 const familyId = computed(() => financeStore.state.family?.id || '')
 const primaryAction = computed(() => intelligence.value.actions[0] || null)
@@ -269,6 +277,7 @@ async function requestExplanation() {
       analysis: intelligence.value,
       question: question.value,
       commandCenter: v3Command.value,
+      proactiveAgenda: proactiveAgenda.value,
     })
     aiResponse.value = result.response
     memoryState.value = result.memoryStatus
