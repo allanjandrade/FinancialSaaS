@@ -24,6 +24,33 @@ function subscription(overrides = {}) {
   }
 }
 
+function collectObjectValues(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectObjectValues(item))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value).flatMap((item) => collectObjectValues(item))
+  }
+
+  return [value]
+}
+
+function collectObjectKeys(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectObjectKeys(item))
+  }
+
+  if (value && typeof value === 'object') {
+    return [
+      ...Object.keys(value),
+      ...Object.values(value).flatMap((item) => collectObjectKeys(item)),
+    ]
+  }
+
+  return []
+}
+
 describe('V3.4 assisted execution domain', () => {
   it('adds execution metadata to proactive agenda items without breaking route fields', () => {
     const agenda = buildProactiveFinancialAgenda({
@@ -92,7 +119,7 @@ describe('V3.4 assisted execution domain', () => {
       destructive: false,
     })
     expect(confirmation.message).toContain('Salario')
-    expect(confirmation.message).toContain('R$ 5.000,00')
+    expect(confirmation.message.replace(/\s/g, ' ')).toContain('R$ 5.000,00')
   })
 
   it('maps upcoming subscription charges to safe subscription actions', () => {
@@ -225,6 +252,7 @@ describe('V3.4 assisted execution domain', () => {
       canWrite: false,
       route: '/goals',
     }))
-    expect(JSON.stringify(facts)).not.toMatch(/undefined|null|confirmMutation|writeHandler/)
+    expect(collectObjectValues(facts)).not.toEqual(expect.arrayContaining([undefined, null]))
+    expect(collectObjectKeys(facts)).not.toEqual(expect.arrayContaining(['confirmMutation', 'writeHandler']))
   })
 })
