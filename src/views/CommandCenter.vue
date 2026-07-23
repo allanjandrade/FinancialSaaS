@@ -116,11 +116,22 @@
         </div>
       </aside>
     </section>
+
+    <AssistedActionDrawer
+      :show="Boolean(selectedAssistedAction)"
+      :execution="assistedExecution"
+      :submitting="assistedSubmitting"
+      :error="assistedError"
+      :success-token="assistedSuccessToken"
+      @close="closeAssistedDrawer"
+      @route="openAssistedRoute"
+      @confirm="confirmAssistedAction"
+    />
   </PageShell>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight } from 'lucide-vue-next'
 import PageShell from '@/components/layout/PageShell.vue'
@@ -128,15 +139,24 @@ import NextBestAction from '@/components/v3/NextBestAction.vue'
 import FirstStepsStrip from '@/components/v3/FirstStepsStrip.vue'
 import FinancialAgenda from '@/components/v3/FinancialAgenda.vue'
 import FinancialOSMap from '@/components/v3/FinancialOSMap.vue'
+import AssistedActionDrawer from '@/components/v3/AssistedActionDrawer.vue'
 import { useFinanceStore } from '@/stores/finance.js'
+import { SOURCE_TYPES } from '@/constants/financial-structure.js'
+import { OFFICIAL_INCOME_TYPES } from '@/constants/finance.js'
 import { buildExecutiveSummary } from '@/utils/release7-ux.js'
 import { buildSubscriptionSummary } from '@/utils/subscriptions.js'
 import { buildV3CommandCenter, v3CommandFactsForAI } from '@/domain/v3/commandCenter.js'
 import { buildV3OperatingSystem } from '@/domain/v3/financialOperatingSystem.js'
 import { buildProactiveFinancialAgenda } from '@/domain/v3/proactiveOrchestrator.js'
+import { buildAssistedExecution } from '@/domain/v3/actionExecution.js'
 
 const router = useRouter()
 const financeStore = useFinanceStore()
+const selectedAssistedAction = ref(null)
+const assistedSubmitting = ref(false)
+const assistedError = ref('')
+const assistedSuccessToken = ref(0)
+const DEFAULT_ASSISTED_INCOME_TYPE = 'Salário'
 
 const selectedMonth = computed(() => normalizeMonth(financeStore.state.settings.selectedMonth))
 const selectedYear = computed(() => normalizeYear(financeStore.state.settings.year))
@@ -163,6 +183,13 @@ const proactiveAgenda = computed(() => buildProactiveFinancialAgenda({
   commandCenter: command.value,
   referenceDate: dashboardReferenceDate.value,
 }))
+const assistedExecution = computed(() => selectedAssistedAction.value
+  ? buildAssistedExecution(selectedAssistedAction.value, {
+    state: financeStore.state,
+    subscriptionSummary: subscriptionSummary.value,
+    referenceDate: dashboardReferenceDate.value,
+  })
+  : null)
 const aiFacts = computed(() => v3CommandFactsForAI(command.value))
 const operatingSystem = computed(() => buildV3OperatingSystem({
   command: command.value,
@@ -196,9 +223,113 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0))
 }
 
+function assistedIncomeType(value) {
+  return OFFICIAL_INCOME_TYPES.includes(value) ? value : DEFAULT_ASSISTED_INCOME_TYPE
+}
+
 function runAction(action) {
-  if (!action?.route) return
-  router.push(action.route)
+  if (!action) return
+  const execution = buildAssistedExecution(action, {
+    state: financeStore.state,
+    subscriptionSummary: subscriptionSummary.value,
+    referenceDate: dashboardReferenceDate.value,
+  })
+
+  if (execution.mode === 'drawer') {
+    selectedAssistedAction.value = action
+    assistedError.value = ''
+    return
+  }
+
+  const route = execution.fallbackRoute || execution.route || action.route
+  if (route) router.push(route)
+}
+
+function closeAssistedDrawer() {
+  selectedAssistedAction.value = null
+  assistedSubmitting.value = false
+  assistedError.value = ''
+}
+
+function openAssistedRoute(execution) {
+  closeAssistedDrawer()
+  const route = execution?.fallbackRoute || execution?.route
+  if (route) router.push(route)
+}
+
+function confirmAssistedAction({ execution, draft = {} } = {}) {
+  if (!execution?.canWrite) return
+
+  assistedSubmitting.value = true
+  assistedError.value = ''
+
+  try {
+    let wrote = false
+
+    if (execution.type === 'first-income') {
+      const amount = Number(draft.amount || 0)
+      if (!Number.isFinite(amount) || amount <= 0) {
+        assistedError.value = 'Informe uma receita maior que zero para concluir a ação assistida.'
+        return
+      }
+
+      financeStore.addIncome({
+        description: draft.description,
+        amount,
+        date: draft.date || dashboardReferenceDate.value,
+        type: assistedIncomeType(draft.type),
+        sourceType: SOURCE_TYPES.ACCOUNT,
+        sourceId: draft.sourceId || financeStore.state.financialAccounts?.[0]?.id,
+      })
+      wrote = true
+    } else if (execution.type === 'subscription-charge') {
+      wrote = Boolean(applySubscriptionAction(execution.target?.id, draft))
+    } else if (execution.type === 'cut-dispensable-subscriptions') {
+      const subscriptionIds = draft.subscriptionIds || draft.selectedSubscriptionIds || []
+      subscriptionIds.forEach((subscriptionId) => {
+        if (applySubscriptionAction(subscriptionId, draft)) wrote = true
+      })
+    } else if (execution.type === 'create-first-goal') {
+      financeStore.addPlanningGoal({
+        name: draft.name,
+        type: draft.type || 'reserva_emergencia',
+        target_amount: Number(draft.targetAmount || 0),
+        current_amount: Number(draft.currentAmount || 0),
+        target_date: draft.targetDate || '',
+        monthly_contribution: Number(draft.monthlyContribution || 0),
+        status: 'active',
+      })
+      wrote = true
+    }
+
+    if (wrote) assistedSuccessToken.value += 1
+  } catch (error) {
+    assistedError.value = 'Não foi possível concluir a ação assistida. Revise os dados e tente novamente.'
+  } finally {
+    assistedSubmitting.value = false
+  }
+}
+
+function applySubscriptionAction(subscriptionId, draft = {}) {
+  if (!subscriptionId) return null
+
+  if (draft.action === 'cancel') {
+    return financeStore.cancelSubscription(subscriptionId, draft.endedAt || draft.ended_at || dashboardReferenceDate.value)
+  }
+
+  if (draft.action === 'updateDate') {
+    const nextBillingDate = draft.nextBillingDate || draft.next_billing_date
+    if (!nextBillingDate) {
+      assistedError.value = 'Informe a nova data de cobrança para atualizar a assinatura.'
+      return null
+    }
+
+    return financeStore.updateSubscription(subscriptionId, {
+      next_billing_date: nextBillingDate,
+    })
+  }
+
+  return financeStore.pauseSubscription(subscriptionId)
 }
 </script>
 

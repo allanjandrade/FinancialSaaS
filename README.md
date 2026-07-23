@@ -1,6 +1,6 @@
 # Controle Financeiro
 
-**Versão atual: 3.3.0**
+**Versão atual: 3.4.0**
 
 Aplicação web de controle financeiro pessoal e familiar: receitas, despesas, cartões, benefícios (VA/VR), metas, maturidade financeira, assistente IA e modo família com sincronização em nuvem (Supabase).
 
