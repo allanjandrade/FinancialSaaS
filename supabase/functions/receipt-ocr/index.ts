@@ -1,6 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders, errorResponse, jsonResponse } from '../_shared/cors.ts'
-import { runChatAssistant } from '../_shared/chat.ts'
 import { extractReceiptFromImage } from '../_shared/receipt.ts'
 import {
   assertBase64Size,
@@ -8,24 +7,19 @@ import {
   requireAuthenticatedUser,
 } from '../_shared/auth.ts'
 
-/**
- * @deprecated Use /functions/v1/chat ou /functions/v1/receipt-ocr
- */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (req.method !== 'POST') {
+    return errorResponse('Método não permitido', 405)
+  }
+
   try {
     await requireAuthenticatedUser(req)
     const body = await req.json().catch(() => ({}))
-    const {
-      message,
-      image,
-      imagemBase64,
-      mimeType: bodyMimeType,
-      acao,
-    } = body
+    const { image, imagemBase64, mimeType: bodyMimeType, extractedText } = body
 
     let cleanBase64: string | null = null
     let targetMimeType = bodyMimeType || 'image/jpeg'
@@ -37,24 +31,17 @@ serve(async (req) => {
       cleanBase64 = imagemBase64.includes(',') ? imagemBase64.split(',')[1] : imagemBase64
     }
 
-    if (cleanBase64) assertBase64Size(cleanBase64)
-
-    const isReceiptFlow = acao === 'processar-comprovante'
-
-    if (isReceiptFlow) {
-      if (!cleanBase64) {
-        return errorResponse('Imagem obrigatória para OCR', 400)
-      }
-      const extracted = await extractReceiptFromImage(cleanBase64, targetMimeType)
-      return jsonResponse(extracted)
+    if (!cleanBase64) {
+      return errorResponse('Imagem obrigatória (image.data ou imagemBase64)', 400)
     }
 
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      return errorResponse('Campo "message" é obrigatório para chat', 400)
-    }
-
-    const responseText = await runChatAssistant(message, cleanBase64, targetMimeType)
-    return jsonResponse({ response: responseText })
+    assertBase64Size(cleanBase64)
+    const extracted = await extractReceiptFromImage(
+      cleanBase64,
+      targetMimeType,
+      typeof extractedText === 'string' ? extractedText : '',
+    )
+    return jsonResponse(extracted)
   } catch (error) {
     const authError = authErrorDetails(error)
     if (authError) return errorResponse(authError.message, authError.status)
@@ -62,6 +49,7 @@ serve(async (req) => {
     if (msg.startsWith('INVALID_JSON') || msg.startsWith('INVALID_SCHEMA')) {
       return errorResponse('Schema inválido na resposta da IA', 422, msg)
     }
-    return errorResponse('Erro crítico', 500, msg)
+    const status = msg.startsWith('OCR_UNAVAILABLE') ? 503 : 500
+    return errorResponse('Erro ao processar comprovante', status, msg)
   }
 })

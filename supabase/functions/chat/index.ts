@@ -1,31 +1,29 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders, errorResponse, jsonResponse } from '../_shared/cors.ts'
-import { runChatAssistant } from '../_shared/chat.ts'
-import { extractReceiptFromImage } from '../_shared/receipt.ts'
+import { runChatAssistant, runFinancialAnalyst } from '../_shared/chat.ts'
 import {
   assertBase64Size,
   authErrorDetails,
   requireAuthenticatedUser,
 } from '../_shared/auth.ts'
 
-/**
- * @deprecated Use /functions/v1/chat ou /functions/v1/receipt-ocr
- */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (req.method !== 'POST') {
+    return errorResponse('Método não permitido', 405)
+  }
+
   try {
     await requireAuthenticatedUser(req)
     const body = await req.json().catch(() => ({}))
-    const {
-      message,
-      image,
-      imagemBase64,
-      mimeType: bodyMimeType,
-      acao,
-    } = body
+    const { message, image, imagemBase64, mimeType: bodyMimeType, mode, facts, memory } = body
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return errorResponse('Campo "message" é obrigatório', 400)
+    }
 
     let cleanBase64: string | null = null
     let targetMimeType = bodyMimeType || 'image/jpeg'
@@ -38,30 +36,19 @@ serve(async (req) => {
     }
 
     if (cleanBase64) assertBase64Size(cleanBase64)
-
-    const isReceiptFlow = acao === 'processar-comprovante'
-
-    if (isReceiptFlow) {
-      if (!cleanBase64) {
-        return errorResponse('Imagem obrigatória para OCR', 400)
-      }
-      const extracted = await extractReceiptFromImage(cleanBase64, targetMimeType)
-      return jsonResponse(extracted)
-    }
-
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      return errorResponse('Campo "message" é obrigatório para chat', 400)
-    }
-
-    const responseText = await runChatAssistant(message, cleanBase64, targetMimeType)
+    const responseText = mode === 'financial-analysis'
+      ? await runFinancialAnalyst(
+        message,
+        facts && typeof facts === 'object' && !Array.isArray(facts) ? facts : {},
+        Array.isArray(memory) ? memory : [],
+      )
+      : await runChatAssistant(message, cleanBase64, targetMimeType)
     return jsonResponse({ response: responseText })
   } catch (error) {
     const authError = authErrorDetails(error)
     if (authError) return errorResponse(authError.message, authError.status)
     const msg = error instanceof Error ? error.message : 'Erro desconhecido'
-    if (msg.startsWith('INVALID_JSON') || msg.startsWith('INVALID_SCHEMA')) {
-      return errorResponse('Schema inválido na resposta da IA', 422, msg)
-    }
-    return errorResponse('Erro crítico', 500, msg)
+    const status = msg.startsWith('CHAT_UNAVAILABLE') ? 503 : 500
+    return errorResponse('Erro no assistente de chat', status, msg)
   }
 })
