@@ -25,7 +25,7 @@
 
 ```javascript
 window.SUPABASE_CONFIG = {
-  url: "https://oedbaemzavzvxysikkpk.supabase.co",
+  url: "https://your-project-ref.supabase.co",
   anonKey: "sua-chave-anon-real-aqui"
 };
 ```
@@ -86,7 +86,7 @@ npm install -g supabase
 
 2. Vincule ao seu projeto:
 ```bash
-supabase link --project-ref oedbaemzavzvxysikkpk
+supabase link --project-ref your-project-ref
 ```
 
 3. Implante a Edge Function:

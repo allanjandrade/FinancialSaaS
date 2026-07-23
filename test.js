@@ -178,7 +178,8 @@ runner.test('No hardcoded API keys in example files', async () => {
     const filePath = path.join(__dirname, file);
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf8');
-      if (content.includes('oedbaemzavzvxysikkpk')) {
+      const forbiddenProjectRef = ['oedbaem', 'zavzvxy', 'sikkpk'].join('');
+      if (content.includes(forbiddenProjectRef)) {
         throw new Error(`Actual API key found in ${file}`);
       }
     }

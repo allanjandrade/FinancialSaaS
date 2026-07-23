@@ -33,7 +33,7 @@ window.SUPABASE_CONFIG = {
 ```javascript
 window.SUPABASE_CONFIG = {
   url: "https://your-project-id.supabase.co",
-  anonKey "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  anonKey "your-anon-key-here"
 };
 ```
 
