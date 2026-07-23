@@ -54,8 +54,13 @@ function agendaItem({
   impactAmount = 0,
   annualImpactAmount = 0,
   source = 'system',
+  executionType = type || key,
+  executionMode = 'route',
+  requiresConfirmation = false,
+  contextKey = key,
+  subscriptionId,
 }) {
-  return {
+  const item = {
     key,
     type,
     title,
@@ -68,7 +73,13 @@ function agendaItem({
     impactAmount: roundMoney(impactAmount),
     annualImpactAmount: roundMoney(annualImpactAmount),
     source,
+    executionType,
+    executionMode,
+    requiresConfirmation: Boolean(requiresConfirmation),
+    contextKey,
   }
+  if (subscriptionId) item.subscriptionId = subscriptionId
+  return item
 }
 
 function sortAgenda(items = []) {
@@ -186,6 +197,10 @@ export function buildProactiveFinancialAgenda({
       priority: 'critical',
       horizon: 'today',
       source: 'first-steps',
+      executionType: 'first-income',
+      executionMode: 'drawer',
+      requiresConfirmation: true,
+      contextKey: 'income',
     }))
   }
 
@@ -202,6 +217,10 @@ export function buildProactiveFinancialAgenda({
       horizon: 'today',
       impactAmount: count,
       source: review.kind || 'review',
+      executionType: 'review-ocr',
+      executionMode: 'drawer',
+      requiresConfirmation: false,
+      contextKey: review.id,
     }))
   })
 
@@ -209,6 +228,7 @@ export function buildProactiveFinancialAgenda({
     const days = Number(charge.daysUntil)
     const name = charge.name || charge.provider || 'Assinatura'
     const dueDate = charge.next_billing_date || charge.dueDate || null
+    const subscriptionId = charge.subscription_id || charge.id
     items.push(agendaItem({
       key: `subscription-${charge.id}`,
       type: 'subscription-charge',
@@ -221,6 +241,11 @@ export function buildProactiveFinancialAgenda({
       dueDate,
       impactAmount: charge.amount,
       source: 'subscriptions',
+      executionType: 'subscription-charge',
+      executionMode: 'drawer',
+      requiresConfirmation: true,
+      contextKey: subscriptionId,
+      subscriptionId,
     }))
   })
 
@@ -238,6 +263,10 @@ export function buildProactiveFinancialAgenda({
       impactAmount: avoidableMonthly,
       annualImpactAmount: avoidableMonthly * 12,
       source: 'subscriptions',
+      executionType: 'cut-dispensable-subscriptions',
+      executionMode: 'drawer',
+      requiresConfirmation: true,
+      contextKey: 'subscriptions',
     }))
   }
 
@@ -255,6 +284,10 @@ export function buildProactiveFinancialAgenda({
       horizon: 'month',
       impactAmount: wishlistTotal,
       source: 'wishlist',
+      executionType: 'route',
+      executionMode: 'route',
+      requiresConfirmation: false,
+      contextKey: 'wishlist',
     }))
   }
 
@@ -269,6 +302,10 @@ export function buildProactiveFinancialAgenda({
       priority: hasExpense(state, monthData) ? 'medium' : 'low',
       horizon: 'month',
       source: 'goals',
+      executionType: 'create-first-goal',
+      executionMode: 'drawer',
+      requiresConfirmation: true,
+      contextKey: 'goal',
     }))
   }
 
@@ -283,6 +320,10 @@ export function buildProactiveFinancialAgenda({
       priority: 'low',
       horizon: 'next7',
       source: 'cadence',
+      executionType: 'route',
+      executionMode: 'route',
+      requiresConfirmation: false,
+      contextKey: 'weekly-review',
     }))
   }
 
