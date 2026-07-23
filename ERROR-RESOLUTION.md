@@ -7,7 +7,7 @@
 **Correção:** Modificada linha 61 do `sw.js` para clonar a resposta antes de usá-la na operação de cache put.
 
 ### 2. 403 Forbidden em family_members ✅ CORRIGIDO
-**Erro:** `GET https://oedbaemzavzvxysikkpk.supabase.co/rest/v1/family_members 403 (Forbidden)`
+**Erro:** `GET https://your-project-ref.supabase.co/rest/v1/family_members 403 (Forbidden)`
 **Correção:** Adicionadas políticas RLS ausentes para family_members (update e delete) e garantido que RLS está habilitado em todas as tabelas.
 
 **Ação Necessária:** Você precisa executar novamente a configuração SQL para aplicar as mudanças nas políticas RLS:

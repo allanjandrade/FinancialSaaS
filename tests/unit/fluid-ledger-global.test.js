@@ -1,0 +1,194 @@
+import fs from 'node:fs'
+import { describe, expect, it } from 'vitest'
+
+const read = (file) => fs.readFileSync(file, 'utf8')
+const exists = (file) => fs.existsSync(file)
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const blocksFor = (source, selector) => {
+  const selectorPattern = escapeRegex(selector)
+  const selectorBoundary = '(?=$|[\\s,.:>+~\\[\\)#\\{])'
+  const rulePattern = new RegExp(`(?=(?:^|[{}])\\s*([^{}]*?${selectorPattern}${selectorBoundary}[^{}]*)\\{([^{}]*)\\})`, 'g')
+  const blocks = []
+  let match
+
+  while ((match = rulePattern.exec(source)) !== null) {
+    blocks.push(`${match[1]} {${match[2]}}`)
+    rulePattern.lastIndex += 1
+  }
+
+  return blocks
+}
+
+const blockFor = (source, selector) => blocksFor(source, selector).join('\n')
+
+const surfaceBlockFor = (source, selector) => blocksFor(source, selector)
+  .filter((block) => {
+    const header = block.split('{')[0]
+    return header.split(',').some((part) => {
+      const trimmed = part.trim()
+      if (!trimmed.startsWith(selector)) return false
+      const rest = trimmed.slice(selector.length)
+      return !/[ >+~]/.test(rest)
+    })
+  })
+  .join('\n')
+
+describe('fluid ledger global redesign', () => {
+  it('checks full multi-line CSS rules for static surface regressions', () => {
+    const source = `
+      .purchase-hero,
+      .purchase-shell,
+      .review-panel {
+        background: var(--surface-ledger);
+        box-shadow: var(--shadow-card);
+      }
+    `
+
+    expect(surfaceBlockFor(source, '.purchase-hero')).toContain('box-shadow: var(--shadow-card)')
+  })
+
+  it('defines ledger surface tokens and neutralizes raised card defaults', () => {
+    const tokens = read('src/styles/tokens.css')
+    const main = read('src/styles/main.css')
+    const layout = read('src/styles/layout.css')
+
+    expect(tokens).toContain('--surface-page:')
+    expect(tokens).toContain('--surface-ledger:')
+    expect(tokens).toContain('--surface-rail:')
+    expect(tokens).toContain('--surface-muted:')
+    expect(tokens).toContain('--divider:')
+    expect(tokens).toContain('--divider-strong:')
+    expect(tokens).toContain('--shadow-card: 0 0 0 1px transparent')
+    expect(tokens).toContain('--shadow-card-hover: 0 0 0 1px transparent')
+
+    expect(main).toContain('/* Fluid Ledger global surfaces */')
+    expect(main).toContain('.panel,')
+    expect(main).toContain('.summary-card,')
+    expect(main).toContain('.dashboard-panel,')
+    expect(main).toContain('.app-card')
+    expect(main).toContain('background: var(--surface-ledger)')
+    expect(main).toContain('box-shadow: none')
+    expect(main).toContain('border-radius: var(--radius-sm)')
+
+    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.app-card', '.metric-card', '.kpi-card']) {
+      const surfaceBlocks = blockFor(main, selector)
+      expect(surfaceBlocks, `${selector} should not reintroduce raised motion`).not.toContain('transform: translateY(-')
+      expect(surfaceBlocks, `${selector} should not reintroduce raised hover shadows`).not.toContain('box-shadow: var(--shadow-card-hover)')
+    }
+
+    expect(layout).toContain('background: var(--surface-ledger)')
+    expect(layout).toContain('box-shadow: none')
+  })
+
+  it('provides semantic ledger layout primitives', () => {
+    const files = [
+      'src/components/layout/LedgerPage.vue',
+      'src/components/layout/LedgerSection.vue',
+      'src/components/layout/LedgerStrip.vue',
+      'src/components/layout/LedgerTable.vue',
+      'src/components/layout/LedgerRail.vue',
+      'src/components/layout/LedgerEmptyState.vue',
+    ]
+
+    for (const file of files) {
+      expect(exists(file), `${file} should exist`).toBe(true)
+    }
+
+    expect(read('src/components/layout/LedgerPage.vue')).toContain('class="ledger-page"')
+    expect(read('src/components/layout/LedgerSection.vue')).toContain('class="ledger-section"')
+    expect(read('src/components/layout/LedgerStrip.vue')).toContain('class="ledger-strip"')
+    expect(read('src/components/layout/LedgerTable.vue')).toContain('class="ledger-table"')
+    expect(read('src/components/layout/LedgerRail.vue')).toContain('class="ledger-rail"')
+    expect(read('src/components/layout/LedgerEmptyState.vue')).toContain('class="ledger-empty-state"')
+  })
+
+  it('moves primary authenticated pages to ledger layout classes', () => {
+    const pages = [
+      'src/views/Home.vue',
+      'src/views/Entries.vue',
+      'src/views/FinancialStructure.vue',
+      'src/views/Subscriptions.vue',
+    ]
+
+    for (const file of pages) {
+      const source = read(file)
+      expect(source, file).toContain('ledger-')
+      expect(source, file).toContain('Ledger')
+    }
+  })
+
+  it('moves public and auth pages to continuous institutional surfaces', () => {
+    const pages = [
+      'src/views/public/Landing.vue',
+      'src/views/public/Pricing.vue',
+      'src/views/Login.vue',
+      'src/views/Signup.vue',
+      'src/views/ForgotPassword.vue',
+      'src/views/ResetPassword.vue',
+      'src/views/AuthCallback.vue',
+    ]
+
+    for (const file of pages) {
+      const source = read(file)
+      expect(source, file).toContain('ledger-')
+      expect(source, file).not.toContain('box-shadow: var(--shadow-card)')
+    }
+  })
+
+  it('keeps cards only for explicit allowed exceptions', () => {
+    const source = [
+      read('src/views/Home.vue'),
+      read('src/views/Entries.vue'),
+      read('src/views/FinancialStructure.vue'),
+      read('src/views/public/Landing.vue'),
+      read('src/views/public/Pricing.vue'),
+    ].join('\n')
+
+    for (const selector of ['.panel', '.summary-card', '.dashboard-panel', '.app-card', '.metric-card', '.kpi-card', '.feature-card', '.trust-card', '.first-step-card']) {
+      const surfaceBlocks = blockFor(source, selector)
+      expect(surfaceBlocks, `${selector} should not lift static ledger surfaces`).not.toContain('transform: translateY(-')
+      expect(surfaceBlocks, `${selector} should not use raised card hover shadows`).not.toContain('box-shadow: var(--shadow-card-hover)')
+    }
+
+    expect(source).not.toContain('grid-template-columns: repeat(auto-fit, minmax(230px, 1fr))')
+  })
+
+  it('does not reintroduce broad raised-card styling on static surfaces', () => {
+    const source = [
+      read('src/styles/main.css'),
+      read('src/styles/layout.css'),
+      read('src/views/Home.vue'),
+      read('src/views/Entries.vue'),
+      read('src/views/FinancialStructure.vue'),
+      read('src/views/public/Landing.vue'),
+      read('src/views/public/Pricing.vue'),
+      read('src/views/PurchaseDetail.vue'),
+      read('src/views/PurchaseNew.vue'),
+      read('src/views/PurchaseWishlist.vue'),
+    ].join('\n')
+
+    const staticSelectors = [
+      '.panel',
+      '.summary-card',
+      '.dashboard-panel',
+      '.metric-card',
+      '.kpi-card',
+      '.app-card',
+      '.feature-card',
+      '.trust-card',
+      '.first-step-card',
+      '.purchase-hero',
+      '.purchase-shell',
+      '.review-panel',
+      '.empty-panel',
+      '.page-head',
+      '.section-title',
+    ]
+
+    for (const selector of staticSelectors) {
+      const surfaceBlocks = surfaceBlockFor(source, selector)
+      expect(surfaceBlocks, `${selector} should stay flat on static surfaces`).not.toContain('box-shadow: var(--shadow-card)')
+      expect(surfaceBlocks, `${selector} should stay still on static surfaces`).not.toContain('transform: translateY(-')
+    }
+  })
+})

@@ -29,13 +29,34 @@ function showMessage(message, isError = false) {
   }, 5000);
 }
 
+function getButtonLabel(button) {
+  const labels = {
+    loginButton: "Entrar",
+    signupButton: "Criar conta",
+    resetButton: "Enviar link de recuperação",
+  };
+  return labels[button.id] || "Continuar";
+}
+
+function validateStrongPassword(password) {
+  const value = String(password || "");
+  if (value.length < 12) return "A senha deve ter pelo menos 12 caracteres";
+  if (!/[A-Z]/.test(value)) return "A senha deve ter pelo menos uma letra maiúscula";
+  if (!/[a-z]/.test(value)) return "A senha deve ter pelo menos uma letra minúscula";
+  if (!/\d/.test(value)) return "A senha deve ter pelo menos um número";
+  if (!/[^A-Za-z0-9]/.test(value)) return "A senha deve ter pelo menos um símbolo";
+  return "";
+}
+
 function setLoading(button, isLoading) {
   if (isLoading) {
     button.disabled = true;
-    button.innerHTML = '<span class="loading-spinner"></span> Processando...';
+    const spinner = document.createElement("span");
+    spinner.className = "loading-spinner";
+    button.replaceChildren(spinner, document.createTextNode(" Processando..."));
   } else {
     button.disabled = false;
-    button.innerHTML = button.id === "loginButton" ? "Entrar" : "Criar conta";
+    button.textContent = getButtonLabel(button);
   }
 }
 
@@ -132,8 +153,9 @@ async function handleSignup(event) {
     return;
   }
 
-  if (password.length < 6) {
-    showMessage("A senha deve ter no mínimo 6 caracteres", true);
+  const passwordError = validateStrongPassword(password);
+  if (passwordError) {
+    showMessage(passwordError, true);
     return;
   }
 

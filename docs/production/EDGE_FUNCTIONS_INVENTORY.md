@@ -1,0 +1,42 @@
+# Inventario de Edge Functions
+
+Funcoes criticas esperadas:
+
+- `get-feature-flags`
+- `monthly-report`
+- `net-worth`
+- `product-ocr`
+- `statement-ocr`
+- `financial-snapshot`
+- `benefit-burn-rate`
+- `card-risk`
+- `month-end-projection`
+- `category-anomalies`
+- `purchase-simulation`
+- `recurring-suggestions`
+- `ai-assist`
+- `propose-action`
+- `confirm-action`
+- `revert-action`
+- `automation-config`
+- `run-automations`
+- `price-search`
+- `predictive-snapshot`
+- `scenario-simulation`
+- `advisor-report`
+- `advisor-feedback`
+- `billing-create-checkout`
+- `billing-webhook`
+- `billing-customer-portal`
+- `billing-subscription-status`
+- `billing-cancel-subscription`
+- `admin-current-user`
+- `admin-invite-tester`
+- `admin-revoke-tester`
+- `admin-set-feature-override`
+- `admin-set-user-plan`
+- `tester-accept-invite`
+- `tester-status`
+- `entitlements-resolve`
+- `health-check`
+- `operational-insights`

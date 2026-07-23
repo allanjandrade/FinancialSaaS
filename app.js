@@ -1,4 +1,10 @@
 import AIConversationManager from "./ai-conversations.js";
+import {
+  normalizeReceiptData,
+  tryParseFinancialJson,
+  formatConfirmedExpenseMessage,
+  toExpensePayload,
+} from "./utils/ai-receipt.js";
 
 // Use global Supabase client initialized in HTML
 const supabase = window.supabase;
@@ -128,6 +134,7 @@ function init() {
   populateMonths();
   setDefaultDate();
   wireEvents();
+  initializeSettingsTabs();
   setEntryType("expense");
   render();
   lucide.createIcons();
@@ -179,9 +186,9 @@ function monthKeyFromDate(dateString, shift = 0) {
 function calculateCardCompetency(dateString) {
   const [year, month, day] = dateString.split("-").map(Number);
   const closingDay = state.settings.cardClosingDay || 1;
-  
+
   let competencyMonth, competencyYear;
-  
+
   if (day <= closingDay) {
     const nextMonth = new Date(year, month, 1);
     competencyMonth = nextMonth.getMonth() + 1;
@@ -191,7 +198,7 @@ function calculateCardCompetency(dateString) {
     competencyMonth = nextNextMonth.getMonth() + 1;
     competencyYear = nextNextMonth.getFullYear();
   }
-  
+
   return { competencyMonth, competencyYear };
 }
 
@@ -248,7 +255,7 @@ function calcMonth(month) {
   const vaIncome = state.incomes
     .filter((item) => monthKeyFromDate(item.date) === key && item.type === "Vale alimentacao")
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  
+
   const cashExpenses = state.expenses
     .filter((item) => {
       const isCashPayment = item.payment !== "Cartao de credito";
@@ -256,15 +263,15 @@ function calcMonth(month) {
       return isCashPayment && impactsThisMonth;
     })
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  
+
   const cardBill = state.expenses
     .filter((item) => item.payment === "Cartao de credito" && expenseImpactKey(item) === key)
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  
+
   const vaUse = state.expenses
     .filter((item) => expenseImpactKey(item) === key && isVaExpense(item))
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  
+
   return {
     key,
     incomeCash,
@@ -362,56 +369,56 @@ function wireEvents() {
   if (els.entryForm) {
     els.entryForm.addEventListener("submit", handleSubmit);
   }
-  
+
   const exportButton = document.querySelector("#exportButton");
   if (exportButton) {
     exportButton.addEventListener("click", exportData);
   }
-  
+
   const clearButton = document.querySelector("#clearButton");
   if (clearButton) {
     clearButton.addEventListener("click", resetData);
   }
-  
+
   const logoutButton = document.querySelector("#logoutButton");
   if (logoutButton) {
     logoutButton.addEventListener("click", logout);
   }
-  
+
   if (els.settingsForm) {
     els.settingsForm.addEventListener("submit", handleSettingsSubmit);
   }
-  
+
   if (els.cardSettingsForm) {
     els.cardSettingsForm.addEventListener("submit", handleCardSettingsSubmit);
   }
-  
+
   if (els.createFamilyButton) {
     els.createFamilyButton.addEventListener("click", () => {
       const familyName = prompt("Nome da família:");
       if (familyName) createFamily(familyName);
     });
   }
-  
+
   if (els.inviteMemberButton) {
     els.inviteMemberButton.addEventListener("click", () => {
       const email = prompt("E-mail do membro para convidar:");
       if (email) inviteMember(email);
     });
   }
-  
+
   if (els.sidebarToggle) {
     els.sidebarToggle.addEventListener("click", toggleSidebar);
   }
-  
+
   if (els.toggleBalanceButton) {
     els.toggleBalanceButton.addEventListener("click", toggleBalance);
   }
-  
+
   if (els.uploadComprovante) {
     els.uploadComprovante.addEventListener("change", handleReceiptUpload);
   }
-  
+
   if (els.clearEntryButton) {
     els.clearEntryButton.addEventListener("click", clearEntryForm);
   }
@@ -468,7 +475,7 @@ function wireEvents() {
   if (els.payCardBillButton) {
     els.payCardBillButton.addEventListener("click", handlePayCardBill);
   }
-  
+
   // Mobile menu listeners
   if (els.mobileMenuButton) {
     els.mobileMenuButton.addEventListener("click", (e) => {
@@ -482,7 +489,7 @@ function wireEvents() {
   if (els.drawerOverlay) {
     els.drawerOverlay.addEventListener("click", closeMobileDrawer);
   }
-  
+
   // Drawer navigation items
   document.querySelectorAll('.drawer-item').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -491,16 +498,16 @@ function wireEvents() {
       closeMobileDrawer();
     });
   });
-  
+
   // Initialize sidebar as collapsed on mobile
   if (window.innerWidth <= 980 && els.sidebar) {
     els.sidebar.classList.add('collapsed');
   }
-  
+
   // Show/hide mobile menu button based on screen size
   window.addEventListener('resize', handleResize);
   handleResize();
-  
+
   // Debug script to identify elements causing overflow
   document.querySelectorAll('*').forEach(el => {
     if (el.offsetWidth > document.documentElement.clientWidth) {
@@ -508,12 +515,12 @@ function wireEvents() {
       el.style.outline = '2px solid red';
     }
   });
-  
+
   // More options popover
   if (els.moreOptionsButton) {
     els.moreOptionsButton.addEventListener("click", toggleMoreOptionsPopover);
   }
-  
+
   // Close popover when clicking outside
   document.addEventListener('click', (e) => {
     if (els.moreOptionsPopover && els.moreOptionsButton) {
@@ -522,14 +529,14 @@ function wireEvents() {
       }
     }
   });
-  
+
   // More options popover items
   if (els.moreOptionsPopover) {
     els.moreOptionsPopover.querySelectorAll('.popover-item').forEach(item => {
       item.addEventListener('click', handleMoreOptionsAction);
     });
   }
-  
+
   // Handle resize events
   window.addEventListener('resize', () => {
     if (window.innerWidth <= 980 && els.sidebar) {
@@ -537,6 +544,28 @@ function wireEvents() {
     } else if (els.sidebar) {
       els.sidebar.classList.remove('collapsed');
     }
+  });
+}
+
+function initializeSettingsTabs() {
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const tabName = button.dataset.tab;
+
+      // Remove active de todos os botões e conteúdos
+      tabButtons.forEach(b => b.classList.remove("is-active"));
+      tabContents.forEach(c => c.classList.remove("is-active"));
+
+      // Ativa o selecionado
+      button.classList.add("is-active");
+      const content = document.querySelector(`[data-tab="${tabName}"].tab-content`);
+      if (content) {
+        content.classList.add("is-active");
+      }
+    });
   });
 }
 
@@ -611,17 +640,17 @@ async function handleChatFileUpload(event) {
 
   // Show file preview
   showFilePreview(arquivo);
-  
+
   // Store file for later processing
   window.pendingFile = arquivo;
 }
 
 function showFilePreview(arquivo) {
   if (!els.filePreviewChip || !els.chipFileName) return;
-  
+
   els.chipFileName.textContent = arquivo.name;
   els.filePreviewChip.style.display = 'flex';
-  
+
   if (els.chipRemove) {
     lucide.createIcons();
   }
@@ -629,7 +658,7 @@ function showFilePreview(arquivo) {
 
 function removeFilePreview() {
   if (!els.filePreviewChip) return;
-  
+
   els.filePreviewChip.style.display = 'none';
   els.aiFileInput.value = '';
   window.pendingFile = null;
@@ -637,7 +666,7 @@ function removeFilePreview() {
 
 function handleSmartChip(e) {
   const suggestion = e.currentTarget.dataset.suggestion;
-  
+
   if (suggestion === 'Anexar nota fiscal') {
     if (els.aiFileInput) {
       els.aiFileInput.click();
@@ -653,10 +682,10 @@ function handleSmartChip(e) {
 
 function toggleSettingsPopover() {
   if (!els.settingsPopover) return;
-  
+
   const isVisible = els.settingsPopover.style.display === 'flex';
   els.settingsPopover.style.display = isVisible ? 'none' : 'flex';
-  
+
   if (!isVisible) {
     lucide.createIcons();
   }
@@ -664,7 +693,7 @@ function toggleSettingsPopover() {
 
 function handleSettingsAction(e) {
   const action = e.currentTarget.dataset.action;
-  
+
   switch (action) {
     case 'clear-history':
       // Clear chat history
@@ -687,7 +716,7 @@ function handleSettingsAction(e) {
       switchView('settings');
       break;
   }
-  
+
   // Close popover
   if (els.settingsPopover) {
     els.settingsPopover.style.display = 'none';
@@ -705,15 +734,15 @@ function startNewConversation() {
       </div>
     `;
   }
-  
+
   // Clear input
   if (els.aiInput) {
     els.aiInput.value = '';
   }
-  
+
   // Clear file preview
   removeFilePreview();
-  
+
   // Scroll to top
   if (els.chatMessages) {
     els.chatMessages.scrollTop = 0;
@@ -722,10 +751,10 @@ function startNewConversation() {
 
 function toggleConversationSidebar() {
   if (!els.conversationSidebar) return;
-  
+
   const isVisible = els.conversationSidebar.style.display === 'block';
   els.conversationSidebar.style.display = isVisible ? 'none' : 'block';
-  
+
   // Load conversation list when opening
   if (!isVisible) {
     loadConversationList();
@@ -734,22 +763,22 @@ function toggleConversationSidebar() {
 
 function loadConversationList() {
   if (!els.conversationList) return;
-  
+
   // Get conversation history from localStorage
   const conversations = JSON.parse(localStorage.getItem('aiConversations') || '[]');
-  
+
   if (conversations.length === 0) {
     els.conversationList.innerHTML = '<p class="helper-text">Nenhuma conversa salva.</p>';
     return;
   }
-  
+
   els.conversationList.innerHTML = conversations.map(conv => `
-    <div class="conversation-item" data-id="${conv.id}">
-      <div class="conversation-title">${conv.title || 'Nova conversa'}</div>
-      <div class="conversation-date">${new Date(conv.createdAt).toLocaleDateString('pt-BR')}</div>
+    <div class="conversation-item" data-id="${escapeHtml(conv.id || '')}">
+      <div class="conversation-title">${escapeHtml(conv.title || 'Nova conversa')}</div>
+      <div class="conversation-date">${escapeHtml(new Date(conv.createdAt).toLocaleDateString('pt-BR'))}</div>
     </div>
   `).join('');
-  
+
   // Add click listeners to conversation items
   els.conversationList.querySelectorAll('.conversation-item').forEach(item => {
     item.addEventListener('click', () => loadConversation(item.dataset.id));
@@ -759,22 +788,22 @@ function loadConversationList() {
 function loadConversation(conversationId) {
   const conversations = JSON.parse(localStorage.getItem('aiConversations') || '[]');
   const conversation = conversations.find(c => c.id === conversationId);
-  
+
   if (conversation && els.chatMessages) {
     // Restore messages
     els.chatMessages.innerHTML = conversation.messages.map(msg => `
       <div class="${msg.role === 'user' ? 'user-message' : 'ai-message'}">
         <div class="message-content">
-          ${msg.isMarkdown ? marked.parse(msg.content) : msg.content}
+          ${msg.isMarkdown ? renderMarkdownSafe(msg.content) : `<p>${escapeHtml(msg.content || '')}</p>`}
         </div>
       </div>
     `).join('');
-    
+
     // Close sidebar
     if (els.conversationSidebar) {
       els.conversationSidebar.style.display = 'none';
     }
-    
+
     // Scroll to bottom
     scrollToBottom();
   }
@@ -801,11 +830,38 @@ function closeMobileDrawer() {
   document.body.style.overflow = '';
 }
 
+// Skeleton Loader Helper Function
+function createSkeletonLoader(count = 3) {
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++) {
+    const skeleton = document.createElement("div");
+    skeleton.className = "skeleton-message";
+    skeleton.innerHTML = `
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-content">
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+    `;
+    fragment.appendChild(skeleton);
+  }
+
+  return fragment;
+}
+
+// Show Skeleton Loader in a container
+function showSkeletonLoader(container, count = 3) {
+  if (!container) return;
+  container.innerHTML = '';
+  container.appendChild(createSkeletonLoader(count));
+}
+
 function handleResize() {
   if (!els.mobileMenuButton || !els.sidebar) return;
-  
+
   const isMobile = window.innerWidth <= 768;
-  
+
   if (isMobile) {
     els.mobileMenuButton.style.display = 'flex';
     els.sidebar.classList.add('collapsed');
@@ -817,10 +873,10 @@ function handleResize() {
 
 function toggleMoreOptionsPopover() {
   if (!els.moreOptionsPopover) return;
-  
+
   const isVisible = els.moreOptionsPopover.style.display === 'flex';
   els.moreOptionsPopover.style.display = isVisible ? 'none' : 'flex';
-  
+
   if (!isVisible) {
     lucide.createIcons();
   }
@@ -828,7 +884,7 @@ function toggleMoreOptionsPopover() {
 
 function handleMoreOptionsAction(e) {
   const action = e.currentTarget.dataset.action;
-  
+
   switch (action) {
     case 'settings':
       switchView('settings');
@@ -845,7 +901,7 @@ function handleMoreOptionsAction(e) {
       }
       break;
   }
-  
+
   // Close popover
   if (els.moreOptionsPopover) {
     els.moreOptionsPopover.style.display = 'none';
@@ -856,7 +912,7 @@ function showReceiptPreview(arquivo) {
   const leitor = new FileReader();
   leitor.onload = () => {
     const isPdf = arquivo.type === 'application/pdf';
-    
+
     // Create preview modal
     const previewModal = document.createElement('div');
     previewModal.className = 'receipt-preview-modal';
@@ -867,7 +923,7 @@ function showReceiptPreview(arquivo) {
           <button class="close-button" id="closePreview"><i data-lucide="x"></i></button>
         </div>
         <div class="preview-image-container">
-          ${isPdf 
+          ${isPdf
             ? `<div class="pdf-preview">
                 <i data-lucide="file-text" class="pdf-icon"></i>
                 <p>Arquivo PDF selecionado</p>
@@ -883,16 +939,16 @@ function showReceiptPreview(arquivo) {
           </button>
         </div>
         <div class="preview-info">
-          <small>Arquivo: ${arquivo.name}</small>
+          <small>Arquivo: ${escapeHtml(arquivo.name)}</small>
           <small>Tipo: ${isPdf ? 'PDF' : 'Imagem'}</small>
           <small>Tamanho: ${(arquivo.size / 1024).toFixed(1)} KB</small>
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(previewModal);
     lucide.createIcons();
-    
+
     // Add event listeners
     document.getElementById('closePreview').addEventListener('click', closeReceiptPreview);
     document.getElementById('cancelPreview').addEventListener('click', closeReceiptPreview);
@@ -901,7 +957,7 @@ function showReceiptPreview(arquivo) {
       processReceiptWithAI(arquivo, leitor.result);
     });
   };
-  
+
   leitor.readAsDataURL(arquivo);
 }
 
@@ -921,18 +977,37 @@ async function processReceiptWithAI(arquivo, imageData, autoSave = false) {
   const mimeType = arquivo.type;
 
   try {
-    // Call Supabase Edge Function (sem key no front)
-    const { data: aiResponse, error: aiError } = await supabase.functions.invoke('ai-assistant', {
-      body: {
-        acao: 'processar-comprovante',
+    // Call Supabase Edge Function with auth header (required by Edge Function)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('Unauthorized: missing Supabase session token');
+    }
+
+    // IMPORTANT: use fetch manual to guarantee Authorization header reaches the Edge Function
+    const edgeUrl = `${window.SUPABASE_CONFIG.url}/functions/v1/receipt-ocr`;
+
+    const aiFetchResponse = await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
         imagemBase64: base64Puro,
         mimeType
-      }
+      })
     });
 
-    if (aiError) throw new Error(aiError.message || 'Erro ao processar comprovante com IA');
+    const aiFetchJson = await aiFetchResponse.json().catch(() => null);
+    if (!aiFetchResponse.ok) {
+      const statusText = `HTTP ${aiFetchResponse.status}`;
+      const detail = aiFetchJson?.details || aiFetchJson?.error || aiFetchJson?.detail || statusText;
+      throw new Error(`${statusText}: ${detail}`);
+    }
 
-    const extractedData = aiResponse;
+    const extractedData = normalizeReceiptData(aiFetchJson);
 
     // Save receipt to history
     saveReceiptToHistory(arquivo, imageData, extractedData);
@@ -940,9 +1015,11 @@ async function processReceiptWithAI(arquivo, imageData, autoSave = false) {
     // Auto-fill the entry form with AI data
     if (extractedData) {
       if (autoSave) {
-        await autoSaveEntry(extractedData);
+        const saved = saveExpenseFromReceipt(extractedData);
         addMessageToChat(
-          `✅ Registro salvo automaticamente: ${extractedData.estabelecimento || 'Desconhecido'} - R$ ${extractedData.valor || '0'}`,
+          saved
+            ? formatConfirmedExpenseMessage(extractedData)
+            : 'Não foi possível registrar automaticamente: valor não identificado no comprovante.',
           'ai',
           true
         );
@@ -1022,7 +1099,7 @@ async function processReceiptWithAI(arquivo, imageData, autoSave = false) {
 
 function saveReceiptToHistory(arquivo, imageData, extractedData) {
   const history = JSON.parse(localStorage.getItem('receiptHistory') || '[]');
-  
+
   const receipt = {
     id: Date.now(),
     fileName: arquivo.name,
@@ -1033,55 +1110,27 @@ function saveReceiptToHistory(arquivo, imageData, extractedData) {
     processedAt: new Date().toISOString(),
     usedInTransaction: false
   };
-  
+
   history.unshift(receipt);
-  
+
   // Keep only last 20 receipts
   if (history.length > 20) {
     history.pop();
   }
-  
+
   localStorage.setItem('receiptHistory', JSON.stringify(history));
 }
 
-async function autoSaveEntry(extractedData) {
+function saveExpenseFromReceipt(extractedData) {
   try {
-    // Create entry object from extracted data
-    const entry = {
-      id: Date.now(),
-      amount: parseFloat(extractedData.valor) || 0,
-      description: extractedData.estabelecimento || 'Despesa não identificada',
-      date: extractedData.data || new Date().toISOString().split('T')[0],
-      category: extractedData.categoria || 'Outros',
-      payment: extractedData.metodo || 'Dinheiro',
-      type: 'expense',
-      created_at: new Date().toISOString()
-    };
+    const payload = toExpensePayload(extractedData);
+    if (!payload) return false;
 
-    // Get current entries
-    const entries = JSON.parse(localStorage.getItem('entries') || '[]');
-    entries.unshift(entry);
-    localStorage.setItem('entries', JSON.stringify(entries));
-
-    // Sync with Supabase if available
-    if (window.supabase && currentUser) {
-      const { error } = await window.supabase
-        .from('finance_states')
-        .insert([{
-          user_id: currentUser.id,
-          state: entries,
-          updated_at: new Date().toISOString()
-        }]);
-
-      if (error) {
-        console.error('[AutoSave] Supabase sync error:', error);
-      }
-    }
-
-    // Refresh UI
+    const expense = createExpense(payload);
+    state.expenses.push(expense);
+    saveState();
     renderEntries();
     updateDashboard();
-    
     return true;
   } catch (error) {
     console.error('[AutoSave] Error:', error);
@@ -1092,7 +1141,7 @@ async function autoSaveEntry(extractedData) {
 function showAiLoading(show) {
   // Show/hide loading indicator
   const loadingIndicator = document.querySelector('.ai-loading-indicator');
-  
+
   if (show) {
     if (!loadingIndicator) {
       const indicator = document.createElement('div');
@@ -1119,50 +1168,59 @@ function showAiLoading(show) {
 function sendAiMessageHandler() {
   const message = els.aiInput.value.trim();
   const hasFile = window.pendingFile;
-  
+
   if (!message && !hasFile) return;
-  
+
   // Removido rate limiting artificial para permitir mensagens consecutivas
   // O sistema agora processa mensagens de forma assíncrona sem bloqueio
-  
+
   // Disable send button and show loading state
   if (els.sendAiMessage) {
     els.sendAiMessage.disabled = true;
     els.sendAiMessage.innerHTML = '<div class="spinner"></div>';
   }
-  
+
   // Add message to chat
   if (message) {
     addMessageToChat(message, 'user');
     els.aiInput.value = '';
   }
-  
+
   // Process file if attached
   if (hasFile) {
     const arquivo = window.pendingFile;
     const isPdf = arquivo.type === 'application/pdf';
-    const fileMessage = isPdf 
+    const fileMessage = isPdf
       ? `📎 Arquivo PDF anexado: ${arquivo.name}`
       : `📎 Imagem anexada: ${arquivo.name}`;
-    
+
     addMessageToChat(fileMessage, 'user');
-    
-    // Process with AI
+
+    // Show skeleton loading before async read
+    showSkeletonLoading();
+    scrollToBottom();
+
     const leitor = new FileReader();
     leitor.onload = () => {
-      processReceiptWithAI(arquivo, leitor.result, true);
+      removeFilePreview(); // Clear only after file data has been read
+      const base64Data = leitor.result; // full data URL, e.g. "data:image/jpeg;base64,..."
+      if (message) {
+        // Text + image: send both together via callAiAssistant
+        callAiAssistant(message, 0, 3, { data: base64Data, mimeType: arquivo.type });
+      } else {
+        // Image only: use the dedicated receipt processor
+        processReceiptWithAI(arquivo, base64Data, true);
+      }
     };
     leitor.readAsDataURL(arquivo);
-    
-    // Clear file preview
-    removeFilePreview();
+    return; // skeleton already shown; handler exits here
   }
-  
-  // Show skeleton loading
+
+  // Show skeleton loading (text-only path)
   showSkeletonLoading();
   scrollToBottom();
-  
-  // Call Supabase Edge Function (only if there's a text message)
+
+  // Text-only: call Edge Function
   if (message) {
     callAiAssistant(message);
   }
@@ -1172,29 +1230,29 @@ function showSkeletonLoading() {
   const skeletonDiv = document.createElement('div');
   skeletonDiv.className = 'skeleton-message';
   skeletonDiv.id = 'aiSkeleton';
-  
+
   const avatar = document.createElement('div');
   avatar.className = 'skeleton-avatar';
-  
+
   const content = document.createElement('div');
   content.className = 'skeleton-content';
-  
+
   const line1 = document.createElement('div');
   line1.className = 'skeleton-line long';
-  
+
   const line2 = document.createElement('div');
   line2.className = 'skeleton-line medium';
-  
+
   const line3 = document.createElement('div');
   line3.className = 'skeleton-line short';
-  
+
   content.appendChild(line1);
   content.appendChild(line2);
   content.appendChild(line3);
-  
+
   skeletonDiv.appendChild(avatar);
   skeletonDiv.appendChild(content);
-  
+
   els.chatMessages.appendChild(skeletonDiv);
 }
 
@@ -1205,24 +1263,47 @@ function hideSkeletonLoading() {
   }
 }
 
-async function callAiAssistant(message, retryCount = 0, maxRetries = 3) {
+async function callAiAssistant(message, retryCount = 0, maxRetries = 3, imageAttachment = null) {
   try {
     console.log('[AI] Starting AI assistant call');
     console.log('[AI] Message:', message);
-    
-    // Call AI assistant Edge Function (sem key no front)
-    const { data: aiResponse, error: aiError } = await supabase.functions.invoke('ai-assistant', {
-      body: {
-        acao: 'chat',
-        message,
-      },
-    });
 
-    if (aiError) {
-      throw new Error(aiError.message || 'Erro ao chamar assistente IA');
+    // Call AI assistant Edge Function with auth header (required by Edge Function)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('Unauthorized: missing Supabase session token');
     }
 
-    const aiText = aiResponse?.response || aiResponse?.aiResponse || aiResponse?.text || '';
+    // IMPORTANT: use fetch manual to guarantee Authorization header reaches the Edge Function
+    const edgeUrl = `${window.SUPABASE_CONFIG.url}/functions/v1/chat`;
+
+    const aiFetchResponse = await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        message,
+        ...(imageAttachment ? {
+          image: {
+            data: imageAttachment.data,
+            mimeType: imageAttachment.mimeType
+          }
+        } : {})
+      })
+    });
+
+    const aiFetchJson = await aiFetchResponse.json().catch(() => null);
+    if (!aiFetchResponse.ok) {
+      throw new Error(aiFetchJson?.error || aiFetchJson?.detail || 'Erro ao chamar assistente IA');
+    }
+
+    const aiText =
+      aiFetchJson?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      aiFetchJson?.response || aiFetchJson?.aiResponse || aiFetchJson?.text || '';
 
     hideSkeletonLoading();
 
@@ -1232,26 +1313,35 @@ async function callAiAssistant(message, retryCount = 0, maxRetries = 3) {
       els.sendAiMessage.innerHTML = '<svg><use href="#icon-send"></use></svg>';
     }
 
-    // Render markdown
-    const renderedMarkdown = marked.parse(aiText || 'Desculpe, não consegui processar sua mensagem.');
+    const financialJson = tryParseFinancialJson(aiText);
+    if (financialJson) {
+      const normalized = normalizeReceiptData(financialJson);
+      if (saveExpenseFromReceipt(normalized)) {
+        addMessageToChat(formatConfirmedExpenseMessage(normalized), 'ai', true);
+        scrollToBottom();
+        return;
+      }
+    }
+
+    const renderedMarkdown = renderMarkdownSafe(aiText || 'Desculpe, não consegui processar sua mensagem.');
     addMessageToChat(renderedMarkdown, 'ai', true);
     scrollToBottom();
   } catch (error) {
     console.log('[AI] Error occurred:', error.message);
     console.log('[AI] Error stack:', error.stack);
-    
+
     hideSkeletonLoading();
-    
+
     // Re-enable send button on error
     if (els.sendAiMessage) {
       els.sendAiMessage.disabled = false;
       els.sendAiMessage.innerHTML = '<svg><use href="#icon-send"></use></svg>';
     }
-    
+
     const errorMessage = error.message || 'Desculpe, houve um erro ao processar sua mensagem.';
     addMessageToChat(`**Erro:** ${errorMessage}\n\nPor favor, tente novamente em instantes. Se o problema persistir, verifique sua conexão ou entre em contato com o suporte.`, 'ai', true);
     scrollToBottom();
-    
+
     // Reset cooldown on error to allow retry
     aiCooldown = false;
     if (aiCooldownTimer) clearTimeout(aiCooldownTimer);
@@ -1259,7 +1349,7 @@ async function callAiAssistant(message, retryCount = 0, maxRetries = 3) {
     if (retryCount < maxRetries) {
       const delay = Math.pow(2, retryCount) * 1000;
       await new Promise((resolve) => setTimeout(resolve, delay));
-      return callAiAssistant(message, retryCount + 1, maxRetries);
+      return callAiAssistant(message, retryCount + 1, maxRetries, imageAttachment);
     }
   }
 }
@@ -1268,20 +1358,27 @@ async function callAiAssistant(message, retryCount = 0, maxRetries = 3) {
 function addMessageToChat(message, type, isMarkdown = false) {
   const messageDiv = document.createElement('div');
   messageDiv.className = type === 'user' ? 'user-message' : 'ai-message';
-  
+
   const contentDiv = document.createElement('div');
   contentDiv.className = 'message-content';
-  
+
   if (isMarkdown && type === 'ai') {
-    contentDiv.innerHTML = message;
+    try {
+      const source = /<\/?[a-z][\s\S]*>/i.test(String(message || ""))
+        ? String(message || "")
+        : marked.parse(String(message || ""));
+      contentDiv.innerHTML = sanitizeMarkdownHtml(source);
+    } catch {
+      contentDiv.textContent = String(message || "");
+    }
   } else {
     const paragraph = document.createElement('p');
     paragraph.textContent = message;
     contentDiv.appendChild(paragraph);
   }
-  
+
   messageDiv.appendChild(contentDiv);
-  
+
   els.chatMessages.appendChild(messageDiv);
 }
 
@@ -1303,16 +1400,16 @@ function addMonths(dateStr, months) {
 function handlePayCardBill() {
   const state = getState();
   const month = calcMonth(state.settings.selectedMonth);
-  
+
   if (month.cardBill <= 0) {
     alert("Nao ha fatura para pagar este mes.");
     return;
   }
-  
+
   if (!confirm(`Deseja pagar a fatura de ${money.format(month.cardBill)}?`)) {
     return;
   }
-  
+
   // Create expense record for the card bill payment
   const expense = createExpense({
     date: new Date().toISOString().split('T')[0],
@@ -1322,9 +1419,9 @@ function handlePayCardBill() {
     amount: month.cardBill,
     paid: true,
   });
-  
+
   state.expenses.push(expense);
-  
+
   // Mark all card expenses as paid
   state.expenses.forEach(exp => {
     if (exp.payment === "Cartao de credito" && !exp.paid) {
@@ -1332,18 +1429,18 @@ function handlePayCardBill() {
       const expMonth = expDate.getMonth();
       const expYear = expDate.getFullYear();
       const selectedDate = new Date(state.settings.selectedMonth);
-      
+
       if (expMonth === selectedDate.getMonth() && expYear === selectedDate.getFullYear()) {
         exp.paid = true;
       }
     }
   });
-  
+
   setState(state);
   saveState();
   render();
   scheduleRemoteSave();
-  
+
   alert("Fatura paga com sucesso!");
 }
 
@@ -1375,7 +1472,7 @@ function setEntryType(type) {
     .map((item) => `<option value="${item}">${item}</option>`)
     .join("");
   els.entryPayment.innerHTML = paymentMethods.map((item) => `<option value="${item}">${item}</option>`).join("");
-  
+
   // Update checkbox label based on type
   const paidLabelSpan = els.paidLabel.querySelector('span');
   if (paidLabelSpan) {
@@ -1431,7 +1528,7 @@ function handleSettingsSubmit(event) {
 
 function handleCardSettingsSubmit(event) {
   event.preventDefault();
-  
+
   const cardLimit = Number(els.cardLimitInput.value);
   const cardClosingDay = Number(els.cardClosingDayInput.value);
   const cardDueDay = Number(els.cardDueDayInput.value);
@@ -1492,10 +1589,10 @@ function handleSubmit(event) {
     const installmentAmount = amount / installmentCount;
     for (let i = 0; i < installmentCount; i++) {
       const installmentDate = addMonths(date, i);
-      const installmentDescription = isInstallment 
+      const installmentDescription = isInstallment
         ? `${description} (Parcela ${i + 1}/${installmentCount})`
         : description;
-      
+
       const income = createIncome({
         date: installmentDate,
         type: els.entryCategory.value,
@@ -1511,7 +1608,7 @@ function handleSubmit(event) {
 
     for (let i = 0; i < installmentCount; i++) {
       const installmentDate = addMonths(date, i);
-      const installmentDescription = isInstallment 
+      const installmentDescription = isInstallment
         ? `${description} (Parcela ${i + 1}/${installmentCount})`
         : description;
 
@@ -1585,7 +1682,7 @@ async function initSupabase() {
   }
 
   const { data } = await supabase.auth.getSession();
-  
+
   if (!data.session) {
     // Redirect to login page if not authenticated
     window.location.href = "./login.html";
@@ -1616,29 +1713,38 @@ async function handleSession(session) {
 }
 
 async function logout() {
-  if (!supabase) return;
-  
-  // Cleanup real-time subscription
-  cleanupRealtimeSubscription();
-  
-  // Clear localStorage for security and privacy
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(CACHE_KEY);
-  localStorage.clear();
-  
-  await supabase.auth.signOut();
-  currentUser = null;
-  currentFamily = null;
-  currentUserRole = null;
-  remoteReady = false;
-  
-  // Redirect to login page
-  window.location.href = "./login.html";
+  try {
+    // Cleanup real-time subscription
+    cleanupRealtimeSubscription();
+
+    // Clear localStorage for security and privacy
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.clear();
+
+    // If supabase is not initialized, still redirect
+    if (!supabase || !supabase.auth) {
+      window.location.href = "./login.html";
+      return;
+    }
+
+    await supabase.auth.signOut();
+  } catch (e) {
+    // Don’t block logout redirect
+  } finally {
+    currentUser = null;
+    currentFamily = null;
+    currentUserRole = null;
+    remoteReady = false;
+
+    window.location.href = "./login.html";
+  }
 }
+
 
 async function loadRemoteState() {
   if (!remoteReady) return;
-  
+
   // Try to load from cache first (stale-while-revalidate)
   const cachedData = localStorage.getItem(CACHE_KEY);
   if (cachedData) {
@@ -1660,16 +1766,16 @@ async function loadRemoteState() {
       // Production: Removed console.error for security
     }
   }
-  
+
   // Load user's family
   await loadUserFamily();
-  
+
   if (!currentFamily) {
     // User has no family, show family creation UI
     showFamilyCreationUI();
     return;
   }
-  
+
   try {
     const { data, error } = await supabase
       .from("finance_states")
@@ -1688,17 +1794,17 @@ async function loadRemoteState() {
       const normalizedState = normalizeState(data.data);
       setState(normalizedState);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
-      
+
       // Update cache with fresh data
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         state: data.data,
         timestamp: Date.now()
       }));
-      
+
       populateMonths();
       setDefaultDate();
       render();
-      
+
       // Setup real-time subscription
       setupRealtimeSubscription();
       return;
@@ -1714,7 +1820,7 @@ async function loadRemoteState() {
 
 async function loadUserFamily() {
   if (!currentUser) return;
-  
+
   const { data, error } = await supabase
     .from("family_members")
     .select("family_id, role, families!inner(name)")
@@ -1805,19 +1911,30 @@ function renderFamilyMembers(members) {
     return;
   }
 
-  els.membersList.innerHTML = members.map(member => `
+  els.membersList.innerHTML = members.map(member => {
+    const memberName = escapeHtml(member.profiles?.full_name || member.profiles?.email || 'Usuário');
+    const memberEmail = escapeHtml(member.profiles?.email || '');
+    const memberRole = member.role === 'admin' ? 'admin' : 'member';
+    const roleLabel = memberRole === 'admin' ? 'Administrador' : 'Membro';
+    const memberId = escapeHtml(member.user_id || '');
+    return `
     <div class="family-member-item">
       <div class="member-info">
-        <strong>${member.profiles?.full_name || member.profiles?.email || 'Usuário'}</strong>
-        <small>${member.profiles?.email || ''}</small>
+        <strong>${memberName}</strong>
+        <small>${memberEmail}</small>
       </div>
       <div class="member-role">
-        <span class="role-badge ${member.role}">${member.role === 'admin' ? 'Administrador' : 'Membro'}</span>
-        ${currentUserRole === 'admin' && member.role !== 'admin' ? 
-          `<button class="danger-button small" onclick="removeFamilyMember('${member.user_id}')">Remover</button>` : ''}
+        <span class="role-badge ${safeCssToken(memberRole)}">${roleLabel}</span>
+        ${currentUserRole === 'admin' && member.role !== 'admin' ?
+          `<button class="danger-button small" type="button" data-remove-member="${memberId}">Remover</button>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  els.membersList.querySelectorAll('[data-remove-member]').forEach((button) => {
+    button.addEventListener('click', () => removeFamilyMember(button.dataset.removeMember));
+  });
 }
 
 async function removeFamilyMember(userId) {
@@ -1848,14 +1965,14 @@ function renderFamilyInfo() {
 
   els.familyInfo.innerHTML = `
     <div class="family-details">
-      <strong>Família: ${currentFamily.name}</strong>
+      <strong>Família: ${escapeHtml(currentFamily.name || '')}</strong>
       <small>Seu papel: ${currentUserRole === 'admin' ? 'Administrador' : 'Membro'}</small>
     </div>
   `;
 
   els.familyActions.style.display = 'block';
   els.createFamilyButton.style.display = 'none';
-  
+
   if (currentUserRole === 'admin') {
     els.inviteMemberButton.style.display = 'block';
   } else {
@@ -1863,7 +1980,7 @@ function renderFamilyInfo() {
   }
 
   loadFamilyMembers();
-  
+
   // Ensure members list is visible
   els.membersList.innerHTML = '<p class="helper-text">Carregando membros...</p>';
 }
@@ -1877,7 +1994,7 @@ async function inviteMember(email) {
   try {
     // Check if user exists
     const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-    
+
     if (userError) throw userError;
 
     const targetUser = users.find(u => u.email === email.trim());
@@ -1921,7 +2038,7 @@ function checkDeletePermission() {
 
 function setupRealtimeSubscription() {
   if (!remoteReady || realtimeSubscription || !currentFamily) return;
-  
+
   realtimeSubscription = supabase
     .channel('finance_states_changes')
     .on(
@@ -1949,13 +2066,13 @@ function setupRealtimeSubscription() {
     .subscribe((status) => {
       // Production: Removed console.error for security
     });
-    
+
   setupFamilyMembersRealtime();
 }
 
 function setupFamilyMembersRealtime() {
   if (!remoteReady || familyMembersSubscription || !currentFamily) return;
-  
+
   familyMembersSubscription = supabase
     .channel('family_members_changes')
     .on(
@@ -2005,7 +2122,7 @@ async function saveRemoteNow() {
     // Production: Removed console.error for security
     return;
   }
-  
+
   // Re-setup real-time subscription after save
   if (!realtimeSubscription) {
     setupRealtimeSubscription();
@@ -2029,12 +2146,12 @@ function renderSummary() {
   const cardLimit = state.settings.cardLimit || 0;
   const availableLimit = cardLimit > 0 ? cardLimit - month.cardBill : null;
   const hideBalance = state.settings.hideBalance;
-  
+
   const formatValue = (value) => hideBalance ? "••••" : money.format(value);
-  
+
   // Calculate consolidated net worth (Patrimônio Líquido)
   const netWorth = month.cashBalance + vaBalance + (availableLimit !== null ? availableLimit : 0);
-  
+
   // Main card - Net Worth (consolidated balance)
   const mainCard = `
     <article class="metric metric-main ${netWorth < 0 ? "bad" : "good"}">
@@ -2048,7 +2165,7 @@ function renderSummary() {
       <small class="metric-detail">Dinheiro ${formatValue(month.cashBalance)} + Vale ${formatValue(vaBalance)} ${availableLimit !== null ? `+ Disponível ${formatValue(availableLimit)}` : ""}</small>
     </article>
   `;
-  
+
   // Secondary cards - origins breakdown
   const secondaryCards = [
     ["Receita mês", month.incomeCash, "good"],
@@ -2057,19 +2174,19 @@ function renderSummary() {
     ["Limite disponível", availableLimit !== null ? availableLimit : 0, "good"],
     ["Saldo vale", vaBalance, vaBalance < 0 ? "bad" : "warn"],
   ];
-  
+
   const secondaryCardsHTML = secondaryCards
     .map(([label, value, tone]) => `<article class="metric metric-secondary ${tone}"><span>${label}</span><strong>${formatValue(value)}</strong></article>`)
     .join("");
-  
+
   els.summaryGrid.innerHTML = mainCard + secondaryCardsHTML;
-  
+
   // Re-attach event listener for inline balance toggle
   const inlineToggle = document.getElementById("balanceToggleInline");
   if (inlineToggle) {
     inlineToggle.addEventListener("click", toggleBalance);
   }
-  
+
   lucide.createIcons();
   updateBalanceButtonIcon();
 }
@@ -2086,7 +2203,7 @@ function renderRecent() {
   els.recentList.innerHTML = items.length
     ? items.map((item) => `
       <div class="activity-item">
-        <div><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.date)} - ${item.category}</small></div>
+        <div><strong>${escapeHtml(item.description)}</strong><small>${formatDate(item.date)} - ${escapeHtml(item.category)}</small></div>
         <span class="amount ${item.kind === "Receita" ? "income" : "expense"}">${money.format(item.amount)}</span>
       </div>`).join("")
     : `<div class="empty">Sem lancamentos</div>`;
@@ -2097,8 +2214,8 @@ function renderEntriesTable() {
     <tr>
       <td>${formatDate(item.date)}</td>
       <td><span class="badge ${item.kind === "Receita" ? "green" : "red"}">${item.kind}</span></td>
-      <td>${item.category}</td>
-      <td>${item.payment || "-"}</td>
+      <td>${escapeHtml(item.category)}</td>
+      <td>${escapeHtml(item.payment || "-")}</td>
       <td>${money.format(item.amount)}</td>
       <td>${formatImpact(item.impact)}</td>
     </tr>
@@ -2111,7 +2228,7 @@ function renderMonthlyList() {
     const data = calcMonth(index + 1);
     const balance = vaBalanceUntil(index + 1);
     const hasData = data.incomeCash > 0 || data.cashExpenses > 0 || balance !== 0;
-    
+
     return { name, index, data, balance, hasData };
   }).filter(month => month.hasData);
 
@@ -2141,14 +2258,14 @@ function renderMonthlyList() {
 
 function renderCardLedger() {
   const state = getState();
-  
+
   // Filter months that have card transactions
   const monthsWithData = monthNames.map((name, index) => {
     const data = calcMonth(index + 1);
     const purchases = cardCount(data.key);
     const available = state.settings.cardLimit ? state.settings.cardLimit - data.cardBill : null;
     const hasData = purchases > 0 || data.cardBill > 0;
-    
+
     return { name, index, data, purchases, available, hasData };
   }).filter(month => month.hasData);
 
@@ -2182,7 +2299,7 @@ function renderBenefit() {
     const data = calcMonth(index + 1);
     const balance = vaBalanceUntil(index + 1);
     const hasData = data.vaIncome > 0 || data.vaUse > 0 || balance !== 0;
-    
+
     return { name, index, data, balance, hasData };
   }).filter(month => month.hasData);
 
@@ -2211,13 +2328,13 @@ function renderBenefit() {
 
 function renderCharts() {
   const hasData = getState().incomes.length > 0 || getState().expenses.length > 0;
-  
+
   if (!hasData) {
     renderEmptyChart(els.barChart);
     renderEmptyChart(els.donutChart);
     return;
   }
-  
+
   try {
     drawBarChart(els.barChart, monthNames.map((_, index) => calcMonth(index + 1)));
     drawDonutChart(els.donutChart, categoryTotals());
@@ -2233,12 +2350,12 @@ function renderEmptyChart(canvas) {
   const width = ctx.logicalWidth;
   const height = ctx.logicalHeight;
   ctx.clearRect(0, 0, width, height);
-  
+
   ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
   ctx.font = "14px Inter, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("Nenhum dado encontrado", width / 2, height / 2 - 10);
-  
+
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.font = "12px Inter, sans-serif";
   ctx.fillText("Adicione lançamentos para visualizar o gráfico", width / 2, height / 2 + 15);
@@ -2334,6 +2451,69 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#039;",
   })[char]);
+}
+
+function isSafeLegacyUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || /[\u0000-\u001f\u007f]/.test(raw)) return false;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    return ["http:", "https:", "mailto:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeMarkdownHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = String(html || "");
+  const allowedTags = new Set(["A", "B", "BR", "CODE", "EM", "LI", "OL", "P", "PRE", "STRONG", "UL"]);
+  const allowedAttrs = {
+    A: new Set(["href", "title", "target", "rel"]),
+    CODE: new Set(["class"]),
+  };
+
+  const walk = (node) => {
+    [...node.childNodes].forEach((child) => {
+      if (child.nodeType !== Node.ELEMENT_NODE) return;
+      if (!allowedTags.has(child.tagName)) {
+        child.replaceWith(document.createTextNode(child.textContent || ""));
+        return;
+      }
+
+      [...child.attributes].forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        const allowed = allowedAttrs[child.tagName]?.has(name) || false;
+        if (name.startsWith("on") || !allowed) {
+          child.removeAttribute(attr.name);
+          return;
+        }
+        if (name === "href" && !isSafeLegacyUrl(attr.value)) child.removeAttribute(attr.name);
+      });
+
+      if (child.tagName === "A" && child.hasAttribute("href")) {
+        child.setAttribute("target", "_blank");
+        child.setAttribute("rel", "noopener noreferrer");
+      }
+      walk(child);
+    });
+  };
+
+  walk(template.content);
+  return template.innerHTML;
+}
+
+function renderMarkdownSafe(markdown) {
+  try {
+    return sanitizeMarkdownHtml(marked.parse(String(markdown || "")));
+  } catch {
+    return escapeHtml(markdown);
+  }
+}
+
+function safeCssToken(value, fallback = "item") {
+  const token = String(value || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  return token || fallback;
 }
 
 function exportData() {

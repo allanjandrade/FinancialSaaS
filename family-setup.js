@@ -25,10 +25,12 @@ function showMessage(message, isError = false) {
 function setLoading(button, isLoading) {
   if (isLoading) {
     button.disabled = true;
-    button.innerHTML = '<span class="loading-spinner"></span> Processando...';
+    const spinner = document.createElement("span");
+    spinner.className = "loading-spinner";
+    button.replaceChildren(spinner, document.createTextNode(" Processando..."));
   } else {
     button.disabled = false;
-    button.innerHTML = button.id === "createFamilyButton" ? "Criar Família" : "Entrar na Família";
+    button.textContent = button.id === "createFamilyButton" ? "Criar Família" : "Entrar na Família";
   }
 }
 

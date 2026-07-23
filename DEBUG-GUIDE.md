@@ -16,7 +16,7 @@
 - Usuário pode autenticar com sucesso
 
 ### Erro 403 Forbidden em family_members
-**Erro:** `GET https://oedbaemzavzvxysikkpk.supabase.co/rest/v1/family_members?... 403 (Forbidden)`
+**Erro:** `GET https://your-project-ref.supabase.co/rest/v1/family_members?... 403 (Forbidden)`
 
 **Causa:** Políticas RLS (Row Level Security) estão bloqueando acesso. Isso é esperado se:
 - O usuário não tem registro de associação de família

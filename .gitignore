@@ -48,3 +48,38 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Backups locais do Supabase podem conter dados financeiros sensíveis.
+backups/
+
+# Local Netlify folder
+.netlify
+
+# Build artifacts
+dist/
+dist-ssr/
+*.timestamp-*.mjs
+*.backup
+*.bak
+
+# Local tool and agent state
+.codex/
+.superpowers/
+.tools/
+.supabase/
+.supabase-cli-home/
+supabase/.temp/
+supabase/.branches/
+
+# Browser, Cypress and smoke-test runtime data
+.appdata*/
+.localappdata*/
+.cypress-cache*/
+.cypress-download*/
+.cypress-user-data*/
+.cypress-appdata*/
+.npm-cache*/
+cypress/downloads/
+cypress/screenshots/
+cypress/videos/
+tmp/
